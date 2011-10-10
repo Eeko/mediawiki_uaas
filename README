@@ -1,0 +1,6 @@
+Mediawiki Upgrade-as-a-Service
+
+A semester-project for Institut Eurecom (http://www.eurecom.fr/). Aims to demonstrate an online-upgrade of a popular web-service (Wikipedia) with a major database-schema change without downtime use.
+
+Eetu Korhonen, 2011
+
