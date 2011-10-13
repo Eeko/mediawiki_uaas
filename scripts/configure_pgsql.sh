@@ -11,4 +11,4 @@ su postgres --session-command=/usr/local/pgsql/bin/initdb -D /usr/local/pgsql/da
 su postgres --session-command='/usr/local/pgsql/bin/pg_ctl -D /usr/local/pgsql/data -l -logfile start'
 
 #ok, let's add postgresql commands to the path of postgres user
-echo "export PATH=$PATH:/usr/local/pgsql" >> ~postgres/.bashrc
+su postgres --session-command='echo "export PATH=$PATH:/usr/local/pgsql/bin" >> ~postgres/.bashrc'

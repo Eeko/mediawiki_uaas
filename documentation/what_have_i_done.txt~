@@ -2,4 +2,4 @@
 Launched the first EC2 (Amazon Linux 64bit) instance to AWS to experiment with.
 Installed postgresql (8.4.7) via YUM 
 Set-up a public git-repository at GitHub (git://github.com/Eeko/mediawiki_uaas.git)
-Made a few scripts to automate installation of postgresql 8.1.3 + Gorda API
+
