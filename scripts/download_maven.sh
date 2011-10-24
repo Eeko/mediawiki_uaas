@@ -33,3 +33,4 @@ echo "export PATH=$PATH:$HOME/bin" >> $HOME/.bashrc
 # make a local link to the unarchived maven binaries
 ln -s $PWD/apache-maven-3.0.3/bin/mvn $HOME/bin/mvn
 
+#requires jdk install java-1.6.0-openjdk-devel

@@ -13,6 +13,7 @@ echo "-----"
 echo "Packages complete\n-----"
 # move to psql dir and start compling
 cd ./postgresql-8.1.3/
+export gorda=../postgresql-g-0.4
 ./configure --enable-depend --prefix=$gorda/install
 make
 # can't run default install without sudo

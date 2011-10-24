@@ -12,3 +12,5 @@ chmod +x java-1.5.0-jdk.bin
 wget http://mirror.mkhelif.fr/apache//maven/binaries/apache-maven-3.0.3-bin.tar.gz
 tar zxvf apache-maven-3.0.3-bin.tar.gz 
 #TODO: SET maven/bin to $PATH
+
+

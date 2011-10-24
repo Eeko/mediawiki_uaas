@@ -38,6 +38,7 @@ then
         echo "gorda unzipped, skipping"
 else   
         unzip postgresql-g-0.4.zip
+	export gorda=$PWD/postgresql-g-0.4
 fi
 
 #check if patch is already applied
