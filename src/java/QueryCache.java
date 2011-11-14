@@ -9,6 +9,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import javax.sql.DataSource;
 
 public class QueryCache implements StatementExecutionListener, DatabaseStartupListener {
   private static RequestProcessor reqProc;
@@ -27,11 +28,11 @@ public class QueryCache implements StatementExecutionListener, DatabaseStartupLi
   public static void cacheLookup(String reqId, String query, ResultSet[] rs1) throws SQLException {
     Connection c = DriverManager.getConnection("jdbc:default:connection"); 
     Transaction tx = reqProc.getRequest(reqId).getTransaction();
-    Utils.info("looking up: txid=" + tx.getId());
+    System.out.println("looking up: txid=" + tx.getId());
     java.sql.Statement s = c.createStatement(); 
     String cached = (String) cache.get(query); 
     if (cached == null) {
-      Utils.info("not found, executing: " + query); 
+      System.out.println("not found, executing: " + query); 
       ResultSet rs = s.executeQuery(query); 
       cached = "values "; 
       boolean first = true;
@@ -67,11 +68,14 @@ public class QueryCache implements StatementExecutionListener, DatabaseStartupLi
           break;
         case Statement.PIPELINE_ERROR: 
           statement.continueExecution(); 
-          Utils.cleanUp(new SQLException("ObjectSet - WriteSet Error.")); 
+          // Utils.cleanUp(new SQLException("ObjectSet - WriteSet Error.")); 
+          SQLException ex =new SQLException("ObjectSet - WriteSet Error.");
+          System.out.println(ex.toString());
           break;
       } 
     } catch (SQLException ex) {
-      Utils.cleanUp(ex);
+      System.out.println(ex.toString());
+      //Utils.cleanUp(ex);
     }
   }
 
@@ -92,7 +96,8 @@ public class QueryCache implements StatementExecutionListener, DatabaseStartupLi
           break;
       } 
     } catch (SQLException ex) {
-      Utils.cleanUp(ex);
+      System.out.println(ex.toString());
+      // Utils.cleanUp(ex);
     }
   }
 }
