@@ -1,3 +1,5 @@
+import gorda.db.*;
+
 public class QueryCache implements StatementExecutionListener, DatabaseStartupListener {
   private static RequestProcessor reqProc;
   private static LinkedHashMap cache = new LinkedHashMap() { 
