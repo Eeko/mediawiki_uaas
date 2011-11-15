@@ -101,3 +101,7 @@ public class QueryCache implements StatementExecutionListener, DatabaseStartupLi
     }
   }
 }
+
+public static void main(String args[]) {
+  System.out.println("Hello, world!");
+}
