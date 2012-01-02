@@ -89,55 +89,57 @@ def parse_updates(query):
     # a more defined regex, since we do not want to match articles containing UPDATE...SET... in their text.
            
     
-    match = re.search(r"\n\s+\d+\s+Query\s/\*\s\S+::\S+\s\*/\s+UPDATE\s`.+`\sSET.+\n", query, flags=(re.DOTALL)) 
+    match = re.search(r"\n\s+\d+\s+Query(\s/\*\s\S+::\S+\s\*/\s+|\s+)UPDATE\s`.+`\sSET.+\n", query, flags=(re.DOTALL)) 
     if match:
-        #print "match"
-        # updates = re.split(r"\s+\d+\s+Query\s/\*\s\S+::\S+\s\*/\s+UPDATE\s`.+`\s", query)    # might need better matching, since there may be words between insert and into in mysql.  Also, should ensure operability if the content contains "UPDATE"
-
-        # updates.pop(0)
-        # updates.pop(0)
-        # updates = "".join(updates)
-        print "Updates: {** " + str(query) + " **}"
         it =  query.split("\n")
         
         found_queries = []
         for index, item in enumerate(it):
-        #for index, item in enumerate(it):
             # first, we need to find how many update-queries are within the parsed query
             a_full_command = count_brackets(item)
             #check if query begins with a proper UPDATE-statement and it does not leave open brackets
-            if re.search(r"\s+\d+\s+Query\s/\*\s\S+::\S+\s\*/\s+UPDATE\s`.+`\s", item) and a_full_command:
+            if re.search(r"\s+\d+\s+Query(\s/\*\s\S+::\S+\s\*/\s+|\s+)UPDATE\s`.+`\s", item) and a_full_command:
                 found_queries.append(item)
-                print "appended " + item + "\n"
-            elif re.search(r"\s+\d+\s+Query\s/\*\s\S+::\S+\s\*/\s+UPDATE\s`.+`\s", item):
+            elif re.search(r"\s+\d+\s+Query(\s/\*\s\S+::\S+\s\*/\s+|\s+)UPDATE\s`.+`\s", item): # just adds the next line to update statement if the current one is insufficient
                 itemtemp = it[index+ 1]
                 it[index + 1] = item + "\n" + itemtemp
-                print "extended " + it[index+1]
-        print "found_queries = " + str(found_queries) + "\n"
-            #target_table = re.search(r"\s*(`|\"|')\S+(`|\"|')", item.partition("SET")[0]).group(0).split().pop().strip("\"\'\`")
-            # print "Target table: " + target_table
-            # HACK! HACK! HACK! HACK!
-            # if target_table == "site_stats":
-            #     break
+        
+        
+        for fq in found_queries:
             
-"""
-            mapping = {}
-            values = split_at_set[2].strip().split(",")
-            for index, item in enumerate(values):
-                column = item.partition("=")[0]
-                if not check_for_complete_parameter(item.partition("=")[2]):
-
-                    values[index+1] = item + "," + values[index+1]
-                    values.pop(index)
+            # Now, we want to parse the queries
+            columns = []
+            where = ""
+            limit = ""
+            remainder = fq.partition("UPDATE")[2].partition("SET")
+            target_table = remainder[0].strip(' \'`"`')
+            comma_split = remainder[2].split(",")
+            for index, item in enumerate(comma_split):
+                column = item.partition("=")
+                # need to split the "where" and "limit" clauses from query
+                check_where = column[2].rpartition("WHERE")
+                check_limit = column[2].rpartition("LIMIT")
+                if check_for_complete_parameter(check_where[0]) and check_where[1] != '':
+                    print str(check_where)
+                    columns.append([column[0],check_where[0]])
+                    where = check_where[2]
+                    #maybe should add limit-chek here too...
+                elif check_for_complete_parameter(check_limit[0]) and check_limit[1] != '':
+                    print str(check_limit)
+                    columns.append([column[0],check_limit[0]])
+                    limit = check_limit[2]
+                    
+                elif check_for_complete_parameter(column[2]):
+                    columns.append([column[0],column[2]])
                 else:
-                    mapping[column] = item.partition("=")[2]
-                
-            # print "Values " + str(len(values)) + ": " + str(values)
-            #mapping = dict(zip(columns,values))
-            results.append([target_table,mapping]) # adds the target table and final mapping to a results-list
-            
+                    comma_split[index + 1] = item + comma_split[index +1]
+            print "fq: " + str(fq) + "\n"
+            print "where: " + where
+            print "limit: " + limit
+            results.append([target_table, columns, where, limit])
+
     return results
-"""
+
 
 # used to check if a complex parsed parameter is included wholly. 
 # E.g. parameter " Hello, World" could be splitted into ['" Hello', ' World"']

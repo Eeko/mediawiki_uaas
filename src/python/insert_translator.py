@@ -24,7 +24,7 @@ def cut_queries_from_file(file):
         else:
             # check if we begin a new transaction
             if re.match(r"\s+\d+\sQuit\t\n", line):
-                print line
+                #print line
                 print (parse_updates(query))
                 query = ""
             query = query + line
