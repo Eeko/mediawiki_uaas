@@ -120,12 +120,12 @@ def parse_updates(query):
                 check_where = column[2].rpartition("WHERE")
                 check_limit = column[2].rpartition("LIMIT")
                 if check_for_complete_parameter(check_where[0]) and check_where[1] != '':
-                    print str(check_where)
+                    # print str(check_where)
                     columns.append([column[0],check_where[0]])
                     where = check_where[2]
                     #maybe should add limit-chek here too...
                 elif check_for_complete_parameter(check_limit[0]) and check_limit[1] != '':
-                    print str(check_limit)
+                    # print str(check_limit)
                     columns.append([column[0],check_limit[0]])
                     limit = check_limit[2]
                     
@@ -133,10 +133,12 @@ def parse_updates(query):
                     columns.append([column[0],column[2]])
                 else:
                     comma_split[index + 1] = item + comma_split[index +1]
-            print "fq: " + str(fq) + "\n"
-            print "where: " + where
-            print "limit: " + limit
-            results.append([target_table, columns, where, limit])
+            # print "fq: " + str(fq) + "\n"
+            # print "where: " + where
+            # print "limit: " + limit
+            #TODO: Map the columns by their index
+            columns_dict = dict(map(lambda x: [x[0].strip(), x[1]], columns))
+            results.append([target_table, columns_dict, where, limit])
 
     return results
 
