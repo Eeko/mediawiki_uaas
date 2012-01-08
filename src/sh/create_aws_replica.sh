@@ -53,7 +53,7 @@ echo "aws_replica_instance=$aws_replica_instance" >> configs.replica
 echo "aws_replica_hostname=$aws_replica_hostname" >> configs.replica
 
 echo "DONE! wrote configs.replica"
-echo "now, copy this to the replicated instance by entering the following command:"
-echo "scp ./configs.replica $aws_replica_hostname:~"
+echo "now, start the next phase with command:"
+echo "$ bash setup_replica.sh"
 
 
