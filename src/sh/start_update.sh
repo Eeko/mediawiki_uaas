@@ -14,3 +14,5 @@ first_line_number=$(wc -l $logfile |tr " " "\n"|head -1)
 
 #now, do the mediawiki update
 #bash std_update_mwiki14-15.sh
+echo "DONE!"
+echo "Now, run \"std_update_mwiki14-15.sh\""
