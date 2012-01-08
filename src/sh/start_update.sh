@@ -9,7 +9,7 @@ source configs.replica
 first_line_number=$(wc -l $logfile |tr " " "\n"|head -1)
 
 # start gathering log-file
-((ssh $aws_original_hostname "tail -f ${logfile} -n +${first_line_number}" > $local_log_cache) &)
+((ssh -o StrictHostKeyChecking=no $aws_original_hostname "tail -f ${logfile} -n +${first_line_number}" > $local_log_cache) &)
 # remember to terminate that ssh+tail process from memory
 
 #now, do the mediawiki update
