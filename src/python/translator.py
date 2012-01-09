@@ -65,7 +65,7 @@ def check_for_article_update(insert_queries,update_queries):
         # ask for the next text_id from the database
         dbconn = MySQLCon( wikiusername, wikipassword, wikidb)
         
-        rev_text_id = dbconn.get_next_rev_text_id()
+        rev_text_id = str(dbconn.get_next_rev_text_id())
         
         cur_values = cur[1]
         cur_id = cur[2].split()[0].split("=")[1].strip("\"'`") #cur_id
@@ -101,10 +101,10 @@ def check_for_article_update(insert_queries,update_queries):
                                                                         # TODO: try editing article rights and see how this gets updated
         print "page_counter =" + "NULL" # cur_values['cur_counter']     # Cur_counter is not that mandatory. Could be read with external db-query and updated last?
         print "page_is_redirect =" + cur_values['cur_is_redirect']
-        print "page_len=" + len(cur_values['cur_text'])
+        print "page_len=" + str(len(cur_values['cur_text']))
         print "page_is_new =" + cur_values['cur_is_new']
         print "page_random =" + "NULL" # cur_values['']      # used by random-page function. Can be re-generated randomly between 0-1
         print "page_touched =" + cur_values['cur_touched']
-        print "(old) page_latest =" + long(page_latest)
+        print "(old) page_latest =" + str(int(page_latest))
 
         # NOTE, WE NEED TO EXECUTE A QUERY BEFORE THE NEXT ONE CAN BE RELIABLY BE GENERATED IN THIS SOFTWARE :(
