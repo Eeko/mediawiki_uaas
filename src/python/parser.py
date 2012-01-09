@@ -1,38 +1,12 @@
 #!/usr/bin/env python
-# insert_parser.py
+#
+# Scripts require python 2.7
+# Amazon AWS default install includes only 2.6 :(
+# parser.py
 # 2011, Eetu Korhonen
 # Reads a mysql query-log file and parses any INSERT INTO statements from individual query.
 
 import re, time, sys
-
-# reads a file and runs a loop until gets externally terminated. Just adds the queries to an array and prints them as they are read
-def cut_queries_from_file(file):
-
-    file = open(file,'r')
-    queries = []
-    query= ""
-    linenumber = None
-    while 1:
-            
-        where = file.tell()
-        line = file.readline()
-        if not line:
-            time.sleep(1)
-            file.seek(where)
-        else:
-            # check if we begin a new transaction
-            # if re.match(r".{0,15}\s+\d+\sConnect\swikiuser@localhost on",line):
-            if re.match(r"\s+\d+\sQuit\t\n", line):
-                #grab the new line number
-                linesplit = line.split()
-                #linenumber = linesplit[linesplit.index("Connect") - 1]
-                linenumber = linesplit[linesplit.index("Quit") - 1]
-                # TODO: maybe should do this part when one reads a "Quit" command
-                # DONE!
-                queries.append(query)
-                # print str(parse_inserts(query))
-                query = line
-            query = query + line
 
 # A method to parse inserts in a full query.
 # TODO: Split this into two methods. To parse query for matching inserts AND 
@@ -178,11 +152,3 @@ def count_brackets(line):
         
     else:
         return False
-
-
-def main():
-    args = sys.argv[1]
-    cut_queries_from_file(args)
-    # print args
-    
-# main()

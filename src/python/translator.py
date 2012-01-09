@@ -1,10 +1,11 @@
 #!/usr/bin/env python
-# insert_translator.py
+# translator.py
 # attempts to translate old mediawiki 1.4 database-edits into 1.5 syntax
 
 # mostly copied from insert_parser.py
 import sys, re
-from insert_parser import *
+from parser import *
+from mysql_connect import *
 
 def cut_queries_from_file(file):
     file = open(file,'r')
@@ -63,7 +64,10 @@ def check_for_article_update(insert_queries,update_queries):
         print "Mapping to 1.5 is:"
         
         print "TODO! First, we can insert the new cur-update to old-table (used as a text-table in 1.5)"
-        print "INSERT INTO wikidb-text "
+        print "INSERT INTO `text` "
+        print "old_id= " + "NULL" 
+        print "old_text =" + cur_values['cur_text']
+        print "old_flags= " + old[1]['old_flag']
         
         """ THE Schema for text (just the same as old old-table)
         CREATE TABLE `text` (
@@ -82,15 +86,16 @@ def check_for_article_update(insert_queries,update_queries):
         """
         
         
-        print "INSERT INTO wikidb-revision "
+        print "INSERT INTO `revision` "
             
-        print "rev_id = NULL" # Should get auto-incremented from old_id
+        print "rev_id = NULL" # Should get auto-incremented from old_id?
         print "rev_page = " + cur_id
         print "rev_comment =" + cur_values['cur_comment']
         print "rev_user = " + cur_values['cur_user']
         print "rev_user_text = " + cur_values['cur_user_text']
         print "rev_timestamp = " + cur_values['cur_timestamp']
         print "rev_minor_edit = " + cur_values['cur_minor_edit']
+        print "rev_text_id =" + "we get this from the previous insert into text as old_id"
         
         print "INSERT INTO wikidb-page "
         print "page_id =" + cur_id
@@ -103,7 +108,7 @@ def check_for_article_update(insert_queries,update_queries):
         print "page_is_new =" + cur_values['cur_is_new']
         print "page_random =" + "NULL" # cur_values['']      # used by random-page function. Can be re-generated randomly between 0-1
         print "page_touched =" + cur_values['cur_touched']
-        print "page_latest =" + " TODO! This needs to be returned by previous insert!" 
+        print "page_latest =" + 
         """
                 INSERT
                   INTO /*$wgDBprefix*/page
@@ -194,11 +199,4 @@ INSERT
     AND old_title=cur_title;
                 
 """
-
-def main():
-    
-    print sys.argv[1]
-    cut_queries_from_file(sys.argv[1])
-    
-main()
 
