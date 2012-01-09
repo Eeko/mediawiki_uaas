@@ -11,7 +11,7 @@ class MySQLCon():
     
     
     #returns the next incrementable number of old_id from 'text' table
-    def get_next_rev_text_id():
+    def get_next_rev_text_id(self):
         conn = MySQLdb.connect (host = "localhost",
                                 user = self.wikiuser,
                                 passwd = self.wikipass,
@@ -24,15 +24,16 @@ class MySQLCon():
         return int(row[0]) + 1
     
     # makes a query. TODO: Refactor, not very DRY
-    def make_query(query):
+    def make_query(self, query):
         conn = MySQLdb.connect (host = "localhost",
                                 user = self.wikiuser,
                                 passwd = self.wikipass,
                                 db = self.wikidb)
         cursor = conn.cursor()
         cursor.execute(query)
-        row = cursor.fetchone()
+        result = cursor.fetchall()
         cursor.close()
         conn.close()
+        return result
         
         
