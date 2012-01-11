@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # prepare for cloning
 # run this in the original MW14 -machine, where MYSQL-query logging is turned on
 #

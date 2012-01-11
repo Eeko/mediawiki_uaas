@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 #update_mediawiki.py
 #the main program to perform the update
 from translator import *

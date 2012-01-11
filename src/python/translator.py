@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # translator.py
 # attempts to translate old mediawiki 1.4 database-edits into 1.5 syntax
 

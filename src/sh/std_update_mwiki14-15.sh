@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # download and do the standard update to mediawiki 1.5
 # may need to be run as superuser, depending on your access-rights
 source configs.replica
@@ -19,10 +20,6 @@ sudo sh -c 'echo "</Directory>" >> /etc/httpd/conf/httpd.conf'
 #copy the mwiki configuration file from 1.4
 sudo cp /var/www/wiki14/LocalSettings.php /var/www/wiki15/LocalSettings.php
 sudo sed -i 's/\/wiki14/\/wiki15/g' /var/www/wiki15/LocalSettings.php
-
-#sudo cp /var/www/wiki15/AdminSettings.sample /var/www/wiki15/AdminSettings.php
-#sudo sed -i "s/wikiadmin/$wikidb_adminusername/g" /var/www/wiki15/AdminSettings.php
-#sudo sed -i "s/adminpass/$wikidb_adminpassword/g" /var/www/wiki15/AdminSettings.php
 
 cd /var/www/wiki15/maintenance
 sudo /usr/local/bin/php upgrade1_5.php	# on the test-computer, the sudoers default php is the newer 5.3, whilst the mediawiki 1.4 & 1.5 require php 5.2

@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # create_aws.replica.sh
 #
 # 

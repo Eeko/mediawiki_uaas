@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #
 # Scripts require python 2.7
 # Amazon AWS default install includes only 2.6 :(

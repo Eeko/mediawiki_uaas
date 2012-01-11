@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # transfer the fiels needed to the parallel universe.
 source configs.replica
 ssh -o StrictHostKeyChecking=no $aws_replica_hostname 'mkdir ~/mw15_update' #we add the replica automatically to ~/.ssh/known_hosts/
