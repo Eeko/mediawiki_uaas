@@ -33,6 +33,7 @@ class MySQLCon():
         cursor.execute(query)
         result = cursor.fetchall()
         cursor.close()
+        conn.commit() #autocommit is disabled in python-mysql
         conn.close()
         return result
         
