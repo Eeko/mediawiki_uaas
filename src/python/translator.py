@@ -48,14 +48,14 @@ def check_for_article_update(insert_queries,update_queries):
             # print str(parsed_query[1][0][0])
             # checks from the first tuple of parameter-array the first value
             if "cur_counter" not in parsed_query[1]:
-                print "Let's map this:" 
-                print str(parsed_query)
+                #print "Let's map this:" 
+                #print str(parsed_query)
                 cur = parsed_query
     
     for parsed_query in insert_queries:
         if parsed_query[0] == 'old':
-            print "With this:"
-            print str(parsed_query)
+            #print "With this:"
+            #print str(parsed_query)
             old = parsed_query
     if old != None and cur != None:
         # TODO: To make consistent, the dict-mapping should be moved to parse_updates script
@@ -75,16 +75,9 @@ def check_for_article_update(insert_queries,update_queries):
             + old[1]['old_flag'] + ")")
         
         print "Mapping to 1.5 is:"
-        """
-        print "TODO! First, we can insert the new cur-update to old-table (used as a text-table in 1.5)"
-        print "INSERT INTO `text` "
-        print "old_id= " + "NULL" 
-        print "old_text =" + cur_values['cur_text']
-        print "old_flags= " + old[1]['old_flag']
-        """
-        sql_revision_insert = ("INSERT INTO `revision` (rev_id,rev_page,rev_text_id,rev_comment,rev_minor_edit,rev_user,rev_user_text,rev_timestamp,rev_deleted) VALUES (NULL," 
-            + cur_id + ", "
-            + rev_text_id + ", "
+        sql_revision_insert = ("INSERT INTO `revision` (rev_id,rev_page,rev_text_id,rev_comment,rev_minor_edit,rev_user,rev_user_text,rev_timestamp,rev_deleted) VALUES (NULL, \'" 
+            + cur_id + "\', \'"
+            + rev_text_id + "\', "
             + cur_values['cur_comment'] + ", "
             + cur_values['cur_minor_edit'] + ", "
             + cur_values['cur_user'] + ", "
@@ -93,42 +86,13 @@ def check_for_article_update(insert_queries,update_queries):
             + "0"
             + ")")
         
-        """ 
-        print "INSERT INTO `revision` "
-        print "rev_id = NULL" # Should get auto-incremented from old_id?
-        print "rev_page = " + cur_id
-        print "rev_text_id=" + rev_text_id
-        print "rev_comment =" + cur_values['cur_comment']
-        print "rev_minor_edit = " + cur_values['cur_minor_edit']
-        print "rev_user = " + cur_values['cur_user']
-        print "rev_user_text = " + cur_values['cur_user_text']
-        print "rev_timestamp = " + cur_values['cur_timestamp']
-        print "rev_deleted=" + "0" # Revision deletion system is not implemented yet in MW1.5
-        """
-        
         sql_page_update = ("UPDATE `page` SET page_latest = \'"
-            + rev_text_id + "\', page_touched = \'"
-            + cur_values['cur_touched'] + "\', page_is_new=\'0\', page_is_redirect = \'"
-            + cur_values['cur_is_redirect'] + "\', page_len =\'"
+            + rev_text_id + "\', page_touched = "
+            + cur_values['cur_touched'] + ", page_is_new=\'0\', page_is_redirect = "
+            + cur_values['cur_is_redirect'] + ", page_len =\'"
             + str(len(cur_values['cur_text'].strip("'"))) + "\' WHERE page_id=\'"
             + cur_id + "\' AND page_latest=\'"
             + str(page_latest) + "\'")
-        """
-        print "UPDATE page ..."
-        print "page_id =" + cur_id
-        print "(new) page_latest =" + rev_text_id
-        print "page_namespace =" + old[1]['old_namespace']  # not included in an update, but in the update-script, old_namespace = cur_namespace
-        print "page_title =" + "TODO! Check how a title-update is added" # cur_values['cur_title']  # not included in update
-        print "page_restrictions =" + "NULL" #cur_values['cur_restrictions']    # cur_restriction can be empty. Tells us who can edit an article.
-                                                                        # TODO: try editing article rights and see how this gets updated
-        print "page_counter =" + "NULL" # cur_values['cur_counter']     # Cur_counter is not that mandatory. Could be read with external db-query and updated last?
-        print "page_is_redirect =" + cur_values['cur_is_redirect']
-        print "page_len=" + str(len(cur_values['cur_text'].strip("'"))) # length needs to be calculated without quotes at end of string
-        print "page_is_new =" + cur_values['cur_is_new']
-        print "page_random =" + "NULL" # cur_values['']      # used by random-page function. Can be re-generated randomly between 0-1
-        print "page_touched =" + cur_values['cur_touched']
-        print "(old) page_latest =" + str(int(page_latest))
-        """
         
         print sql_text_insert
         print sql_revision_insert
