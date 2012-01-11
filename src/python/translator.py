@@ -113,7 +113,7 @@ def check_for_article_update(insert_queries,update_queries):
             + cur_values['cur_is_redirect'] + "\', page_len =\'"
             + str(len(cur_values['cur_text'].strip("'"))) + "\' WHERE page_id=\'"
             + cur_id + "\' AND page_latest=\'"
-            + page_latest + "\'") )
+            + str(page_latest) + "\'")
         """
         print "UPDATE page ..."
         print "page_id =" + cur_id
