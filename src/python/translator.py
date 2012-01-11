@@ -71,17 +71,31 @@ def check_for_article_update(insert_queries,update_queries):
         cur_id = cur[2].split()[0].split("=")[1].strip("\"'`") #cur_id
         page_latest = dbconn.make_query("SELECT page_latest FROM `page` WHERE page_id = "+ str(cur_id))[0][0]
         
-        print "Mapping to 1.5 is:"
+        sql_text_insert = ("INSERT INTO `text` (old_id,old_text,old_flags) VALUES (NULL, " 
+            + cur_values['cur_text'] + ", " 
+            + old[1]['old_flag'] + ")")
         
+        print "Mapping to 1.5 is:"
+        """
         print "TODO! First, we can insert the new cur-update to old-table (used as a text-table in 1.5)"
         print "INSERT INTO `text` "
         print "old_id= " + "NULL" 
         print "old_text =" + cur_values['cur_text']
         print "old_flags= " + old[1]['old_flag']
+        """
+        sql_revision_insert = ("INSERT INTO `revision` (rev_id,rev_page,rev_text_id,rev_comment,rev_minor_edit,rev_user,rev_user_text,rev_timestamp,rev_deleted) VALUES (NULL," 
+            + cur_id + ", "
+            + rev_text_id + ", "
+            + cur_values['cur_comment'] + ", "
+            + cur_values['cur_minor_edit'] + ", "
+            + cur_values['cur_user'] + ", "
+            + cur_values['cur_user_text'] + ", "
+            + cur_values['cur_timestamp'] + ", "
+            + "0"
+            + ")")
         
-        
+        """ 
         print "INSERT INTO `revision` "
-            
         print "rev_id = NULL" # Should get auto-incremented from old_id?
         print "rev_page = " + cur_id
         print "rev_text_id=" + rev_text_id
@@ -91,8 +105,17 @@ def check_for_article_update(insert_queries,update_queries):
         print "rev_user_text = " + cur_values['cur_user_text']
         print "rev_timestamp = " + cur_values['cur_timestamp']
         print "rev_deleted=" + "0" # Revision deletion system is not implemented yet in MW1.5
+        """
         
-        print "INSERT INTO page "
+        sql_page_update = ("UPDATE `page` SET page_latest = \'"
+            + rev_text_id + "\', page_touched = \'"
+            + cur_values['cur_touched'] + "\', page_is_new=\'0\', page_is_redirect = \'"
+            + cur_values['cur_is_redirect'] + "\', page_len =\'"
+            + str(len(cur_values['cur_text'].strip("'"))) + "\' WHERE page_id=\'"
+            + cur_id + "\' AND page_latest=\'"
+            + page_latest + "\'") )
+        """
+        print "UPDATE page ..."
         print "page_id =" + cur_id
         print "(new) page_latest =" + rev_text_id
         print "page_namespace =" + old[1]['old_namespace']  # not included in an update, but in the update-script, old_namespace = cur_namespace
@@ -101,10 +124,14 @@ def check_for_article_update(insert_queries,update_queries):
                                                                         # TODO: try editing article rights and see how this gets updated
         print "page_counter =" + "NULL" # cur_values['cur_counter']     # Cur_counter is not that mandatory. Could be read with external db-query and updated last?
         print "page_is_redirect =" + cur_values['cur_is_redirect']
-        print "page_len=" + str(len(cur_values['cur_text']))
+        print "page_len=" + str(len(cur_values['cur_text'].strip("'"))) # length needs to be calculated without quotes at end of string
         print "page_is_new =" + cur_values['cur_is_new']
         print "page_random =" + "NULL" # cur_values['']      # used by random-page function. Can be re-generated randomly between 0-1
         print "page_touched =" + cur_values['cur_touched']
         print "(old) page_latest =" + str(int(page_latest))
-
+        """
+        
+        print sql_text_insert
+        print sql_revision_insert
+        print sql_page_update
         # NOTE, WE NEED TO EXECUTE A QUERY BEFORE THE NEXT ONE CAN BE RELIABLY BE GENERATED IN THIS SOFTWARE :(

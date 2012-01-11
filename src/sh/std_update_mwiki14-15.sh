@@ -30,4 +30,4 @@ sudo /usr/local/bin/php update.php	# run the schema updater
 
 sudo service httpd start	# restart apache
 echo "the mediawiki 1.5 should now be available at http://localhost/wiki15/index.php"
-echo "Now you should start the cloning python script with \"python ~/mw15_update/insert_translator.py $local_log_cache\" "
+echo "Now you should start the cloning python script with \"python ~/mw15_update/update_mediawiki.py $local_log_cache\" "
