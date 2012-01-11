@@ -97,4 +97,10 @@ def check_for_article_update(insert_queries,update_queries):
         print sql_text_insert
         print sql_revision_insert
         print sql_page_update
+        #make queries
         # NOTE, WE NEED TO EXECUTE A QUERY BEFORE THE NEXT ONE CAN BE RELIABLY BE GENERATED IN THIS SOFTWARE :(
+        # can't generate next id's  (actually, queried from db...) without...
+        dbconn.make_query(sql_text_insert)
+        dbconn.make_query(sql_revision_insert)
+        dbconn.make_query(sql_page_update)
+        
