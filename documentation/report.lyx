@@ -1,0 +1,2093 @@
+#LyX 2.0 created this file. For more info see http://www.lyx.org/
+\lyxformat 413
+\begin_document
+\begin_header
+\textclass article
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding utf8
+\fontencoding global
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command bibtex8
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_amsmath 1
+\use_esint 1
+\use_mhchem 1
+\use_mathdots 1
+\cite_engine basic
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Upgrades as a Service
+\end_layout
+
+\begin_layout Author
+Eetu Korhonen, 
+\begin_inset Flex URL
+status collapsed
+
+\begin_layout Plain Layout
+
+eeko@iki.fi
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Date
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+today
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Flex URL
+status open
+
+\begin_layout Plain Layout
+
+http://eeko.iki.fi/
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Flex URL
+status open
+
+\begin_layout Plain Layout
+
+http://github.com/Eeko/mediawiki_uaas/
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Abstract
+**Eh, maybe writing an abstract etc.
+ is a bit too irrelevant in this scope.
+\end_layout
+
+\begin_layout Section
+Introduction
+\end_layout
+
+\begin_layout Standard
+This document is the end report for an independent research project performed
+ for EURECOM
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+\begin_inset Flex URL
+status collapsed
+
+\begin_layout Plain Layout
+
+http://www.eurecom.fr/
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+ semester project done between July 2011 - January 2012.
+ The purpose of the project was to research and demonstrate possibilities
+ to leverage flexible cloud-infrastructure to provide online service updates
+ with very little or no downtime for the end-user.
+ The project was directed by Dr.
+ Tudor Dumitras from Symantec Research Labs and supervised by Prof.
+ Marc Dacier from EURECOM.
+\end_layout
+
+\begin_layout Section
+Problem
+\end_layout
+
+\begin_layout Standard
+The high level issue under research is the possibility of performing system-upda
+tes in scale without affecting the availability of service to the end-user.
+ With system updates changing the functionality of software, the usual case
+ requires some unavailability period while modifications to the system are
+ made.
+ For this study, we reviewed the Wikipedia upgrade 1.5 from 2002, which required
+ a 22 hour write lock due to a significant database-schema change requiring
+ a re-write of the entire article database.
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+\begin_inset Flex URL
+status collapsed
+
+\begin_layout Plain Layout
+
+http://meta.wikimedia.org/wiki/MediaWiki_1.5_upgrade
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+There are two conventional methods to avoid availability breaks in a distributed
+ system.
+ One is to perform the upgrade as a switch-over, where the system is split
+ in two halves.
+ First one part of the system gets updated upgraded while the other part
+ serves the clients.
+ When the update is completed, the updated system is switched to be the
+ client-serving end and the other part applies the update in turn.
+ The second way is to perform the upgrade as a 
+\begin_inset Quotes eld
+\end_inset
+
+rolling wave
+\begin_inset Quotes erd
+\end_inset
+
+.
+ Here the upgrade is applied to individual nodes of the distributed system
+ in successive order.
+ This allows for a greater accuracy in failure localization and reduces
+ risks of failures as the entire system (or significant parts of it) do
+ not get compromised for upgrade-errors.
+\end_layout
+
+\begin_layout Standard
+However, neither of these approaches allow a downtimeless upgrade if the
+ upgrade causes backwards incompatibilities.
+ Any updates into the non-updated systems should reflect into the updated
+ system as well.
+ In this study, such incompatibility appears with the significant database-schem
+a change of MediaWiki 1.5.
+\end_layout
+
+\begin_layout Subsection
+Leveraging elastic computing resources for updates
+\end_layout
+
+\begin_layout Standard
+The examined method of avoiding the incompatibility issues with downtimeless
+ upgrade is to use external computing resources to flexibly clone the existing
+ service into a 
+\begin_inset Quotes eld
+\end_inset
+
+parallel universe
+\begin_inset Quotes erd
+\end_inset
+
+, where the upgrade can be applied without touching the existing system
+ providing service to the clients.
+ When the upgrade is successfully applied to a machine cloned from a correspondi
+ng existing resource, the system performs some kind of catch-up with the
+ changes inserted into the original client-serving machine and starts routing
+ the client requests into itself.
+ 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "DBLP:conf/middleware/DumitrasN09a"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Modern cloud computing infrastructures provide us with a flexible platform
+ for creating and utilizing external resources as needed.
+ Applications running within Infrastructure as a Service (IaaS) providers
+ such as Amazon EC2, Rackspace Cloud Servers or OpenNebula are by default
+ running on virtualized hardware and are thus very easily replicable without
+ large and permanent investments in big hardware.
+\end_layout
+
+\begin_layout Subsection
+Mediawiki 1.4 to 1.5 upgrade
+\end_layout
+
+\begin_layout Standard
+**Here be, what kind of schema changes happen.
+ Details about the database-queries made by application.
+ What can be seen.
+\end_layout
+
+\begin_layout Section
+Solution
+\end_layout
+
+\begin_layout Standard
+We built a small prototype of a software-stack capable of reading the MySQL
+ query logs in real time from the system providing service to the end-user.
+ Whenever it detects an update to the article-tables under update, it would
+ create a translation of those queries compatible with the new schema.
+ After the standard, non-modified 1.4 to 1.5 update is applied to the parallel
+ universe clone of the system, we use an external program hooking into the
+ new database.
+ This program uses the recorder modifications to mimic inserting article
+ updates to the updated database.
+ When the system under update has reached a synchronous state with the live-syst
+em, we can shut down the old systemand the upgrade programs and route all
+ traffic to the updated system.
+\end_layout
+
+\begin_layout Subsection
+Implementation details
+\end_layout
+
+\begin_layout Standard
+The original test-system under study is a small-sized
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+\begin_inset Flex URL
+status collapsed
+
+\begin_layout Plain Layout
+
+http://aws.amazon.com/ec2/instance-types/
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+ Amazon EC2-instance running a software stack
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+Amazon Linux 2011.2 with PHP 5.2, Apache 2 and MySQL 5.1 
+\end_layout
+
+\end_inset
+
+ capable of running MediaWiki 1.4 with a custom test-database for a set of
+ test articles.
+ 
+\end_layout
+
+\begin_layout Subsubsection
+System replication tools
+\end_layout
+
+\begin_layout Standard
+To automate the system replication procedure, we developed a series of bash-scri
+pts leveraging the Amazon EC2-tools and knowledge of the details of the
+ system under upgrade.
+ Mainly we require the Amazon instance running details (instance number,
+ hostname) and the application information (database name, host, username
+ and password) for running the replication stack.
+ The system is designed in a way, that we can use an external node with
+ ssh- and EC2-tools access to the Amazon Instances to dowload the necessary
+ programs from repository and start performing the upgrade process centrally,
+ without touching the running instance providing service for the clients.
+\end_layout
+
+\begin_layout Standard
+\begin_inset VSpace defskip
+\end_inset
+
+The main scripts to initiate the upgrading process are as follows:
+\end_layout
+
+\begin_layout Itemize
+configs.conf -- A sourcable configuration file to set the required environmental
+ variables in the bash-scripts.
+ Requires manual modifications to point to the EC2-node to be replicated
+ and for the necessary database knowledge.
+\end_layout
+
+\begin_layout Itemize
+prepare_for_cloning.sh
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+Not implemented yet as of 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+today
+\end_layout
+
+\end_inset
+
+.
+\end_layout
+
+\end_inset
+
+ -- Intended for installing a necessary stack of software to the node to
+ be replicated.
+ Such as Python 2.7 and mysql-python required by the updater software.
+ Should also ensure that the required program-versions are available for
+ the updating scripts at the locations specified in them.
+\end_layout
+
+\begin_layout Itemize
+create_aws_replica.sh -- Initiates the cloning process by copying the targeted
+ node disk-image into a Amazon AMI (Requiring a brief shutdown of the said
+ instance.) and starting a new identical instance with the said image.
+ Creates a modified.
+ configs.replica -file to include the necessary instance details of the replicate
+d instance needed by the rest of the scripts.
+\end_layout
+
+\begin_layout Itemize
+setup_replica.sh -- Copies the necessary scripts and programs into the new
+ instance.
+\end_layout
+
+\begin_layout Itemize
+start_update.sh -- Makes some necessary database-access modifications into
+ the query-translating programs and launches an SSH-pipe into the original
+ MediaWiki 1.4 node to stream the query log into a file to be readable by
+ the local transaction-catchup programs.
+ This is to be run in the new, replicated instance.
+\end_layout
+
+\begin_layout Itemize
+std_update_mwiki14-15.sh -- This script contains tools to download the newer
+ MediaWiki 1.5 version and for running the standard upgrade-procedure to
+ create a new copy of MediaWiki 1.5 running on top of the restructured database.
+ This is to be run in the new, replicated instance and requires superuser
+ access for the necessary Apache configuration and reboots.
+\end_layout
+
+\begin_layout Subsubsection
+Query parser, translator and mapper
+\end_layout
+
+\begin_layout Standard
+The rest of the software is a series of python-programs used by update_mediawiki.
+py.
+ Update_mediawiki.py requires the path to the file where the original systems
+ query-log has been streamed as an argument and eventually writes all updates
+ detected for existing articles into the new database schema within the
+ parallel universe.
+\end_layout
+
+\begin_layout Standard
+\begin_inset VSpace defskip
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The program components are as follows:
+\end_layout
+
+\begin_layout Itemize
+update_mediawiki.py -- The entry-point of the program.
+ Contains a main() method executing the translator-program from translator.py.
+\end_layout
+
+\begin_layout Itemize
+translator.py -- Contains the logic needed to use the query-log parser program
+ (parser.py), how to interpret its returns and to translate them into SQL-queries
+ writable by the database-hookup component.
+ (mysql_connect.py)
+\end_layout
+
+\begin_layout Itemize
+parser.py -- Contains the logic required to detect and parse relevant INSERT
+ and UPDATE queries from MySQL query-logs.
+ The lines we wish to detect are the ones making article-updating modifications
+ into an original MediaWiki 1.4 database.
+\end_layout
+
+\begin_layout Itemize
+mysql_connect.py -- Helper methods used to interact with a MySQL database.
+\end_layout
+
+\begin_layout Subsection
+Problems with the implementation
+\end_layout
+
+\begin_layout Standard
+Our query-detector and translator approach mainly requires us to understand
+ and re-implement large portions of the application logic within an external
+ framework.
+ This requires a significant amount of manual labor and would intuitively
+ be more suitable to be integrated directly into the standard upgrading
+ mechanisms instead of providing an external framework.
+ More notably, individual upgrade-instructions are not recyclable for other
+ upgrades nor can we leverage the existing SQL-upgrade instructions to automate
+ the logic-programming.
+\end_layout
+
+\begin_layout Standard
+Another issue is the limits of the data extractable from the query logs.
+ Much of the details ending up to the database can be programmed and computed
+ to be performed by the database itself without necessarily revealing them
+ in the query logs E.g.
+ generating entries via database-triggers and the auto-incrementations of
+ id's are usually done within the database and can't be read from default
+ query-logs.
+ In the lower levels the database itself may perform optimizations or transactio
+n aborts not necessarily visible to the logs or which can be insufficiently
+ hard to predict and react for in large scale parsing.
+ For adequate understanding of the workings of the database, the visible
+ plain-text query-logs are likely inadequate.
+ The approach would be more suited to be done by using the existing database
+ replication infrastructures and binary-logs, which reliably reveal the
+ internal database-actions in detail.
+ Though due to the elasticity of computing resources and low cost of upgrade-fai
+lures, failed upgrades can be tried again as often as needed.
+\end_layout
+
+\begin_layout Standard
+The implementation looks into the updates as individual transaction one
+ at a time, which is necessary as the program simulates a working application
+ performing similar actions in live use scenario.
+ This is hardly efficient for larger data sets and is somewhat error prone
+ should there be unexpected modifications (such as manual inserts) to the
+ database not detectable by the developed application.
+ Another way would be to use the query-logs to create records of data requiring
+ action after a stage of upgrade has been completed.
+ For example, two updates to the same article could be marked as a single
+ entry to a table of 
+\begin_inset Quotes eld
+\end_inset
+
+touched
+\begin_inset Quotes erd
+\end_inset
+
+ article-id's.
+ Then we make a external query to the original database to stream the necessary
+ changes into the parallel universe.
+ This does not free us from implementing some application logic, as actions
+ such as deleting rows or modifying their unique id's would have to be represent
+ed in the tracking logic of tainted-entries.
+ Neither is it granted that the query-logs available present us with enough
+ data to identify the tainted items.
+ For example, an INSERT-query might enter their unique id as NULL and auto-incre
+ment it in the database or application-logic.
+ Such incrementation based on the MAX(ID)-value of the new flattened text-table
+ of MediaWiki 1.5 was required in our implementation.
+\end_layout
+
+\begin_layout Standard
+** Practically this is re-implementing the application functionality in
+ another layer.
+ And we can't just offer an update as an automated service for an arbitary
+ program.
+\end_layout
+
+\begin_layout Standard
+** Provides functional correspondance, but the databases might not be identical
+ and replicable
+\end_layout
+
+\begin_layout Standard
+** would be better to be implemented in the database-replication layer.
+\end_layout
+
+\begin_layout Section
+Alternate approaches
+\end_layout
+
+\begin_layout Standard
+During the course of the study, several other methods of performing the
+ online-upgrade were speculated of and experimented with.
+\end_layout
+
+\begin_layout Subsection
+Using existing database-replication
+\end_layout
+
+\begin_layout Standard
+** Here be a scetch of a proof why plainly leveraging an SQL-script of update
+ does not necessarily work.
+ Reference Gorda.
+ 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "DBLP:dblp_conf/nca/CorreiaPRCVOG07"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Using similarity in application calls
+\end_layout
+
+\begin_layout Standard
+** A short view of could we just feed apache- or network traffic logs to
+ the parallel universe from the old system.
+ In a pure database-schema-changing update this would work, since the server-app
+lication layer stays untouched.
+\end_layout
+
+\begin_layout Subsection
+Using the existing upgrade-tools
+\end_layout
+
+\begin_layout Standard
+One of the more intriguing approaches would be to create a framework to
+ be able to read the existing schema-upgrade scripts available and deduct
+ the upgrade logic and resulting table from those.
+ Since the target tables are expanding leading to increasing time-requirements
+ of re-applying the updates to complete tables, we need to be able to divide
+ the work into smaller subsets as new items and updates get inserted during
+ the online-upgrade.
+\end_layout
+
+\begin_layout Standard
+An intuitive way for such division would be to split the dataset under update
+ by their timestamps, so that we only re-run the standard upgrade script
+ for new items inserted after the last known item in the databases under
+ upgrade was received.
+ However, under some upgrades this will provide and incompatible and possibly
+ broken result due to the unpredictability of the live-system updates.
+\end_layout
+
+\begin_layout Standard
+\begin_inset VSpace defskip
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In an example, we have a database of two tables representing a list of current
+ states and saved histories of those states:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float table
+placement h
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="3" columns="2">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top" width="0">
+<column alignment="center" valignment="top" width="0">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+state_id
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+state_content
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1_Fourth_state
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2_Second_state
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+State-table
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float table
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="5" columns="3">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top" width="0">
+<column alignment="center" valignment="top" width="0">
+<column alignment="center" valignment="top" width="0">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+history_id
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+history_content
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+history_link_to_state
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1_First_state
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1_Second_state
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2_First_state
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+4
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1_Third_state
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+History-table
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Suppose, that a schema upgrade would flatten these said tables into one
+ table containing both the current state of the items and the given history
+ of said items.
+ An upgrade would be done with the following SQL-code:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+-- Note, that the primary id's of the table are auto-incremented.
+\end_layout
+
+\begin_layout Plain Layout
+
+-- This is similar to how Mediawiki 1.4 to 1.5 upgrade handles the 
+\end_layout
+
+\begin_layout Plain Layout
+
+-- database-flatten operation.
+\end_layout
+
+\begin_layout Plain Layout
+
+INSERT INTO "history" (history_content, history_link_to_state) 
+\end_layout
+
+\begin_layout Plain Layout
+
+	SELECT (state_content, state_id)
+\end_layout
+
+\begin_layout Plain Layout
+
+	FROM "state";
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+After the update, the new table would look like this:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float table
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="7" columns="3">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top" width="0">
+<column alignment="center" valignment="top" width="0">
+<column alignment="center" valignment="top" width="0">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+history_id
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+history_content
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+history_link_to_state
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1_First_state
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1_Second_state
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2_First_state
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+4
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1_Third_state
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+5
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1_Fourth_state
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+6
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2_Second_state
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Merged history-table
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+However, suppose that we receive a third state to the original-system during
+ the time taken by the upgrade of the system and it receives several updates
+ for it.
+ We have sufficient translation logic in place to only apply the INSERT-queries
+ for items entered to the database after we begun merging our previous entries.
+ The code would work something like this:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+-- We first apply the modifications from history-table
+\end_layout
+
+\begin_layout Plain Layout
+
+INSERT INTO "history" (history_content, history_link_to_state)
+\end_layout
+
+\begin_layout Plain Layout
+
+	SELECT (history_content, state_id)
+\end_layout
+
+\begin_layout Plain Layout
+
+	FROM "olddb.history"
+\end_layout
+
+\begin_layout Plain Layout
+
+	WHERE timestamp > last_update_time;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+-- Then we flatten the items from the table of current states
+\end_layout
+
+\begin_layout Plain Layout
+
+INSERT INTO "history" (history_content, history_link_to_state)
+\end_layout
+
+\begin_layout Plain Layout
+
+	SELECT (state_content, history_link_to_state)
+\end_layout
+
+\begin_layout Plain Layout
+
+	FROM "olddb.state"
+\end_layout
+
+\begin_layout Plain Layout
+
+	WHERE timestamp > last_update_time;
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Then when we would receive the following rows into the database:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float table
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="2" columns="3">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top" width="0">
+<column alignment="center" valignment="top" width="0">
+<column alignment="center" valignment="top" width="0">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+history_id
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+history_content
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+history_link_to_state
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+5
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3_First_state
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Caption
+
+\begin_layout Plain Layout
+New row in history-table inserted during the update
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Float table
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="2" columns="2">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top" width="0">
+<column alignment="center" valignment="top" width="0">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+state_id
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+state_content
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3_Second_state
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Caption
+
+\begin_layout Plain Layout
+New row in state-table inserted during the update
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+We would end up with a merged table looking like the following:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float table
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="9" columns="3">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top" width="0">
+<column alignment="center" valignment="top" width="0">
+<column alignment="center" valignment="top" width="0">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+history_id
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+history_content
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+history_link_to_state
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1_First_state
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1_Second_state
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2_First_state
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+4
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1_Third_state
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+5
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1_Fourth_state
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+6
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2_Second_state
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+7
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3_First_state
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+8
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3_Second_state
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Merged history-table after incremental upgrade
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+If the upgrade would have been done with write-locks and the two tables
+ would be merged after all 8 commits were received in the same sequential
+ order as in our online-example, the resulting table would look like this:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float table
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="9" columns="3">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top" width="0">
+<column alignment="center" valignment="top" width="0">
+<column alignment="center" valignment="top" width="0">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+history_id
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+history_content
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+history_link_to_state
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1_First_state
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1_Second_state
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2_First_state
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+4
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1_Third_state
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+5
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3_First_state
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+6
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1_Fourth_state
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+7
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2_Second_state
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+8
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3_Second_state
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Merged-history table without online-upgrading
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The id's for items in the different upgrade-approaches are not equivalent.
+ If it is used as an external-id in somewhere else in database-logic without
+ the necessary modifications, we will encounter in faulty behaviour.
+ To fix this, we need to implement some amount of application- or database-logic
+ to upgrade corresponding tables with history_id references.
+\end_layout
+
+\begin_layout Section
+Conclusions
+\end_layout
+
+\begin_layout Subsection
+Future work
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset bibtex
+LatexCommand bibtex
+bibfiles "sources"
+options "plain"
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document

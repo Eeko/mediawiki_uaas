@@ -74,7 +74,7 @@ def check_for_article_update(insert_queries,update_queries):
             + cur_values['cur_text'] + ", " 
             + old[1]['old_flag'] + ")")
         
-        print "Mapping to 1.5 is:"
+        #print "Mapping to 1.5 is:"
         sql_revision_insert = ("INSERT INTO `revision` (rev_id,rev_page,rev_text_id,rev_comment,rev_minor_edit,rev_user,rev_user_text,rev_timestamp,rev_deleted) VALUES (NULL, \'" 
             + cur_id + "\', \'"
             + rev_text_id + "\', "
@@ -103,4 +103,7 @@ def check_for_article_update(insert_queries,update_queries):
         dbconn.make_query(sql_text_insert)
         dbconn.make_query(sql_revision_insert)
         dbconn.make_query(sql_page_update)
+        #TODO: Maybe we need to update the latest read line value as we run the script?
+        #...or not, since we can just launch new instances in AWS, if an update fails.
+        
         

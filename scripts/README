@@ -1,0 +1,5 @@
+This folder includes some deprecated scripts used to perform the initial 
+tests with using GORDA reflection interfaces. This approach was 
+abandoned during the course of study, but the scripts are still included 
+to give hints of the software stack and install procedures should the 
+approach be re-tried.
