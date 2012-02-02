@@ -578,10 +578,37 @@ Using existing database-replication
 \end_layout
 
 \begin_layout Standard
-** Here be a scetch of a proof why plainly leveraging an SQL-script of update
- does not necessarily work.
- Reference Gorda.
- 
+One approach we experimented with was trying to leverage an existing database-re
+flection infrastructure.
+ Initially, the GORDA database replication toolkit
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Flex URL
+status collapsed
+
+\begin_layout Plain Layout
+
+http://gorda.di.uminho.pt/
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+ showed much promise.
+ With a flexible middleware providing accurate reflections and access to
+ the inner workings of the database, we would be assured to have all the
+ necessary data needed for keeping track of the changes during the upgrade.
+ Ideally we could use similar architecture used for redundancy replications
+ of a database and modify their outputs in a way which would accommodate
+ for the changes in database schema.
+ GORDA promised to offer a flexible API to those reflections given that
+ we'd use a supported database.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "DBLP:dblp_conf/nca/CorreiaPRCVOG07"
@@ -591,8 +618,136 @@ key "DBLP:dblp_conf/nca/CorreiaPRCVOG07"
 
 \end_layout
 
+\begin_layout Standard
+However, there proved to be a number of issues with this approach.
+ First of all, the tried toolkit for GORDA somewhat compatible with MediaWiki
+ was one hooking up into PostgreSQL database.
+ For MediaWiki 1.4, the PostgreSQL -support was considered to be 
+\begin_inset Quotes eld
+\end_inset
+
+experimental
+\begin_inset Quotes erd
+\end_inset
+
+ and it was recommended to use MySQL for production database.
+ After the schema upgrade in 1.5, the PostgreSQL-support was officially discarded
+, though the unmodified components were still within the source code.
+ Making the software run on PostgreSQL (or Apache Derby, which is 
+\begin_inset Quotes eld
+\end_inset
+
+most supported
+\begin_inset Quotes erd
+\end_inset
+
+ database for GORDA) requires a number of extra modifications.
+\end_layout
+
+\begin_layout Standard
+Secondly, GORDA itself have more or less been abandoned recently.
+ The documentation is in inconsistent state and in some cases become completely
+ unavailable.
+ For example, the documentation wiki of Escada Replication Server (which
+ is required by later versions of GORDA) has disappeared since.
+ Utilizing GORDA proved to require a tremendous amount of reverse engineering,
+ which became even more troublesome as the database-hookup components lacked
+ a number of important features, such as namespaces for database tables.
+\end_layout
+
+\begin_layout Standard
+** Here be a scetch of a proof why plainly leveraging an SQL-script of update
+ does not necessarily work.
+ Reference Gorda.
+ 
+\end_layout
+
 \begin_layout Subsection
 Using similarity in application calls
+\end_layout
+
+\begin_layout Standard
+One thought to provide upgrades as a service for an ongoing database upgrade
+ would be to move the upgrade-synchronization entirely away from the database-la
+yer.
+ If an upgrade touches only the underlying database layer and the application
+ interface connecting to it, one could cache and re-route identical application
+ calls to a parallel-universe backend replicating similar functionality
+ within different schema.
+ This kind of upgrade would naturally suit a typical 3-tiered web-application,
+ where the user-transactions provided by web-server are separated from a
+ dynamic content engine and data storages.
+ 
+\begin_inset Float figure
+placement h
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename 3-tier.png
+	width 100col%
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+A typical 3-tiered web application
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement h
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename 3-tierinparallel.png
+	width 100col%
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+A 3-tiered web application routing interface-queries to original and upgraded
+ backends
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
