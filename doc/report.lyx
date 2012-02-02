@@ -27,7 +27,7 @@
 \paperfontsize default
 \spacing single
 \use_hyperref false
-\papersize default
+\papersize a4paper
 \use_geometry false
 \use_amsmath 1
 \use_esint 1
@@ -45,8 +45,8 @@
 \end_index
 \secnumdepth 3
 \tocdepth 3
-\paragraph_separation indent
-\paragraph_indentation default
+\paragraph_separation skip
+\defskip medskip
 \quotes_language english
 \papercolumns 1
 \papersides 1
@@ -273,13 +273,142 @@ Modern cloud computing infrastructures provide us with a flexible platform
 \end_layout
 
 \begin_layout Subsection
-Mediawiki 1.4 to 1.5 upgrade
+MediaWiki 1.4 to 1.5 upgrade
 \end_layout
 
 \begin_layout Standard
-**Here be, what kind of schema changes happen.
- Details about the database-queries made by application.
- What can be seen.
+The June 2005 update to MediaWiki 1.5 was primarily introduced to perform
+ the schema change examined in this project.
+ Few of the new features, such as logging the page-rename history and revised
+ permalinking are dependant on the new schema.
+ But those features do not interfere with online-upgrading, since the relevant
+ tables can be re-generated separately from the existing database if needed.
+\end_layout
+
+\begin_layout Standard
+In the 1.4 version of the schema, individual articles contained entries in
+ two tables.
+ The 
+\begin_inset Quotes eld
+\end_inset
+
+cur
+\begin_inset Quotes erd
+\end_inset
+
+-table contained the most recent revisions of the articles in their entirety.
+ The 
+\begin_inset Quotes eld
+\end_inset
+
+old
+\begin_inset Quotes erd
+\end_inset
+
+-table contained the corresponding article history, usually listing up several
+ related (old wikipage revisions) entries for a single article in cur-table.
+ The entries in the tables are connected by the cur-table unique id of 
+\begin_inset Quotes eld
+\end_inset
+
+cur_namespace + cur_title
+\begin_inset Quotes erd
+\end_inset
+
+.
+ A completely new article appears as a new insertion into the cur-table
+ and a modification creates a new entry to the old-table where the contents
+ of the previous cur-entry are copied before it gets updated.
+\end_layout
+
+\begin_layout Standard
+In the 1.5 version, the tables are split into three tables.
+ The new 
+\begin_inset Quotes eld
+\end_inset
+
+revision
+\begin_inset Quotes erd
+\end_inset
+
+ table is formed by combining the previous old- and cur tables and is intended
+ to represent the relevant metadata for all article insertions and updates
+ of the system.
+ Such as the user who edited the page, the relevant timestamps and comments
+ of the new update.
+ A revision-entry is connected to a relevant entry in 
+\begin_inset Quotes eld
+\end_inset
+
+text
+\begin_inset Quotes erd
+\end_inset
+
+-table, which contain the articles themselves.
+ An entry in revisions also connect to an entry in the 
+\begin_inset Quotes eld
+\end_inset
+
+page
+\begin_inset Quotes erd
+\end_inset
+
+-table, which represents an individual article with a revision-history in
+ the revision-table.
+ The most current article is stored in the 
+\begin_inset Quotes eld
+\end_inset
+
+page_latest
+\begin_inset Quotes erd
+\end_inset
+
+ pointer towards a singular entry in revision-table.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement h
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename Database-restructure.png
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Database Schema Changes in MediaWiki 1.5 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "wiki:SchemaChangeChart"
+
+\end_inset
+
+ 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Section
@@ -637,7 +766,7 @@ experimental
 \begin_inset Quotes eld
 \end_inset
 
-most supported
+default
 \begin_inset Quotes erd
 \end_inset
 
@@ -656,9 +785,11 @@ Secondly, GORDA itself have more or less been abandoned recently.
 \end_layout
 
 \begin_layout Standard
-** Here be a scetch of a proof why plainly leveraging an SQL-script of update
- does not necessarily work.
- Reference Gorda.
+Should GORDA have worked and if we'd had enough time to figure out how to
+ port MediaWiki 1.5 to PostgreSQL or another more supported database, it
+ would definitely solve many problems imminent with our other approaches.
+ Such as the consistency problems with application-call or incremental standard
+ upgrading for renewing database subsets.
  
 \end_layout
 
@@ -667,7 +798,7 @@ Using similarity in application calls
 \end_layout
 
 \begin_layout Standard
-One thought to provide upgrades as a service for an ongoing database upgrade
+Another idea to provide upgrades as a service for an ongoing database upgrade
  would be to move the upgrade-synchronization entirely away from the database-la
 yer.
  If an upgrade touches only the underlying database layer and the application
@@ -677,12 +808,14 @@ yer.
  This kind of upgrade would naturally suit a typical 3-tiered web-application,
  where the user-transactions provided by web-server are separated from a
  dynamic content engine and data storages.
- 
+\end_layout
+
+\begin_layout Standard
 \begin_inset Float figure
 placement h
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \align center
@@ -714,11 +847,25 @@ A typical 3-tiered web application
 \end_layout
 
 \begin_layout Standard
+Should the interface to the frontend-engine stay identical, this kind of
+ approach would provide a fairly easy and elegant solution for making a
+ seamless transition to new software version without requiring any adaptations
+ or query mappings between the systems.
+ In the case of MediaWiki 1.4 to 1.5 upgrade, the main focus of the upgrade
+ was this database-schema change.
+ The upgrade could have been split into parts only affecting the application
+ & database layers whilst keeping the user facing web server interface the
+ same.
+ Should an upgrade provide any UI modifications, those can be made in an
+ another upgrade-package keeping the database untouched.
+\end_layout
+
+\begin_layout Standard
 \begin_inset Float figure
 placement h
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \align center
@@ -751,14 +898,66 @@ A 3-tiered web application routing interface-queries to original and upgraded
 \end_layout
 
 \begin_layout Standard
-** A short view of could we just feed apache- or network traffic logs to
- the parallel universe from the old system.
- In a pure database-schema-changing update this would work, since the server-app
-lication layer stays untouched.
+Not every kind of software update would work with this approach.
+ Several upgrades implement new functionality with a need for wide modifications
+ to every layer of the software.
+ Though often such upgrades can be split into incremental parts where the
+ heavy database-modifying and writing operations can be done before the
+ corresponding modifications are introduced to the frontend.
+ As this requires additional engineering-consideration for upgradeability,
+ it might not be feasible to provide upgrading as an external service for
+ application-upgrades modifying the entire stack.
+\end_layout
+
+\begin_layout Standard
+Other issue would be the lack of guarantees for consistency in the entire
+ stack.
+ Should there be failures in the middle- or database tier of the live-system,
+ a dumb frontend-replicator would not detect them nor present adequate informati
+on to account the inconsistency in the parallel universe.
+ Such issues could be coped with most standard redundancy & reliability
+ techniques utilized in the system.
+ The redundancy technology can be made to monitor and require confirmation
+ of commits from the backend or from redundancy replication interfaces.
+ Or with cheap replicable virtual hardware, we could settle with eventual
+ consistency where we just restart an upgrade-procedure until the backends
+ pass sufficient tests of equivalence.
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename 3-tierinparallelfailure.png
+	width 100col%
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+A faulty parallel-run leaving the two systems in inequivalent states
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Subsection
-Using the existing upgrade-tools
+Using the existing upgrade tools to decreasing database subsets
 \end_layout
 
 \begin_layout Standard
