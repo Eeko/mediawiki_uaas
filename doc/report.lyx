@@ -124,8 +124,13 @@ http://github.com/Eeko/mediawiki_uaas/
 \end_layout
 
 \begin_layout Abstract
-**Eh, maybe writing an abstract etc.
- is a bit too irrelevant in this scope.
+This report examines several ways to perform upgrades for service applications
+ without usage downtime by leveraging the possibilities of using on-demand
+ computing resources provided by Infrastructure as a Service -providers.
+ The study has produced a proof-of-concept of a a tool capable of providing
+ a limited live-upgrade from MediaWiki 1.4 to 1.5, originally requiring over
+ 22 hours of write-locking to the system when it was applied to Wikipedia
+ in 2005.
 \end_layout
 
 \begin_layout Section
@@ -173,7 +178,7 @@ tes in scale without affecting the availability of service to the end-user.
  With system updates changing the functionality of software, the usual case
  requires some unavailability period while modifications to the system are
  made.
- For this study, we reviewed the Wikipedia upgrade 1.5 from 2002, which required
+ For this study, we reviewed the Wikipedia upgrade 1.5 from 2005, which required
  a 22 hour write lock due to a significant database-schema change requiring
  a re-write of the entire article database.
 \begin_inset Foot
@@ -621,8 +626,8 @@ Our query-detector and translator approach mainly requires us to understand
  be more suitable to be integrated directly into the standard upgrading
  mechanisms instead of providing an external framework.
  More notably, individual upgrade-instructions are not recyclable for other
- upgrades nor can we leverage the existing SQL-upgrade instructions to automate
- the logic-programming.
+ upgrades; neither can we leverage the existing SQL-upgrade instructions
+ to automate the logic-programming.
 \end_layout
 
 \begin_layout Standard
@@ -633,23 +638,34 @@ Another issue is the limits of the data extractable from the query logs.
  generating entries via database-triggers and the auto-incrementations of
  id's are usually done within the database and can't be read from default
  query-logs.
- In the lower levels the database itself may perform optimizations or transactio
-n aborts not necessarily visible to the logs or which can be insufficiently
- hard to predict and react for in large scale parsing.
+ In the lower levels the database may perform optimizations or transaction
+ aborts not necessarily visible to the logs.
+ Or they can be insufficiently hard to predict and react for in large scale
+ parsing.
  For adequate understanding of the workings of the database, the visible
- plain-text query-logs are likely inadequate.
+ plain-text query-logs are likely insufficient.
  The approach would be more suited to be done by using the existing database
  replication infrastructures and binary-logs, which reliably reveal the
  internal database-actions in detail.
- Though due to the elasticity of computing resources and low cost of upgrade-fai
-lures, failed upgrades can be tried again as often as needed.
+ 
+\end_layout
+
+\begin_layout Standard
+Though due to the elasticity of computing resources and low cost of upgrade-fail
+ures, failed upgrades can be tried again as often as needed.
+ This opens us for possibilities of performing a less-refined probabilistic
+ upgrade, where we only need a chance for individual upgrade to succeed
+ and a number of computers performing the upgrade.
+ After a unit passes tests for schema-equivalence, one can use standard
+ database-replication suites to duplicate the relevant infrastructure to
+ match the existing system.
 \end_layout
 
 \begin_layout Standard
 The implementation looks into the updates as individual transaction one
  at a time, which is necessary as the program simulates a working application
- performing similar actions in live use scenario.
- This is hardly efficient for larger data sets and is somewhat error prone
+ performing similar actions in a live use scenario.
+ This is hardly efficient for larger data sets and is somewhat error prone;
  should there be unexpected modifications (such as manual inserts) to the
  database not detectable by the developed application.
  Another way would be to use the query-logs to create records of data requiring
@@ -678,19 +694,13 @@ ment it in the database or application-logic.
 \end_layout
 
 \begin_layout Standard
-** Practically this is re-implementing the application functionality in
- another layer.
- And we can't just offer an update as an automated service for an arbitary
- program.
-\end_layout
-
-\begin_layout Standard
-** Provides functional correspondance, but the databases might not be identical
- and replicable
-\end_layout
-
-\begin_layout Standard
-** would be better to be implemented in the database-replication layer.
+It is necessary to note that the current implementation does not manage
+ fully without downtime, since creating an identical real-time duplicate
+ in Amazon EC2 requires a downtime to make a copy of the image.
+ However, it should be possible to make relevant replications in virtualized
+ production environments, since equivalent copies of the database can be
+ made without shutting down, by using the standard redundancy replication
+ procedures provided by every major RDBMS.
 \end_layout
 
 \begin_layout Section
@@ -812,7 +822,7 @@ yer.
 
 \begin_layout Standard
 \begin_inset Float figure
-placement h
+placement H
 wide false
 sideways false
 status collapsed
@@ -862,7 +872,7 @@ Should the interface to the frontend-engine stay identical, this kind of
 
 \begin_layout Standard
 \begin_inset Float figure
-placement h
+placement H
 wide false
 sideways false
 status collapsed
@@ -920,9 +930,13 @@ on to account the inconsistency in the parallel universe.
  The redundancy technology can be made to monitor and require confirmation
  of commits from the backend or from redundancy replication interfaces.
  Or with cheap replicable virtual hardware, we could settle with eventual
- consistency where we just restart an upgrade-procedure until the backends
- pass sufficient tests of equivalence.
+ consistency where we just restart an upgrade-procedure until the backend
+ passes sufficient tests of equivalence.
+\end_layout
+
+\begin_layout Standard
 \begin_inset Float figure
+placement H
 wide false
 sideways false
 status collapsed
@@ -996,7 +1010,7 @@ In an example, we have a database of two tables representing a list of current
 placement h
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \align center
@@ -1091,7 +1105,7 @@ State-table
 placement H
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \align center
@@ -1327,7 +1341,7 @@ After the update, the new table would look like this:
 placement H
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \align center
@@ -1643,7 +1657,7 @@ Then when we would receive the following rows into the database:
 placement H
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \align center
@@ -1738,7 +1752,7 @@ New row in history-table inserted during the update
 placement H
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \align center
@@ -1821,7 +1835,7 @@ We would end up with a merged table looking like the following:
 placement H
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \align center
@@ -2124,7 +2138,7 @@ If the upgrade would have been done with write-locks and the two tables
 placement H
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \align center
@@ -2428,8 +2442,48 @@ The id's for items in the different upgrade-approaches are not equivalent.
 Conclusions
 \end_layout
 
+\begin_layout Standard
+The implementation provided fails in its initial goal of performing an online
+ upgrade in a scale comparable to a real-life use scenario.
+ (I.e.
+ the entire Wikipedia and updates performed to it during the upgrade.) Though
+ it manages to illustrate the difficulties in the approach.
+ Namely the requirement to model much of the application logic within the
+ mapper and the unreliabliness of the used data-source.
+ (Human readable query-logs from MySQL.)
+\end_layout
+
+\begin_layout Standard
+In addition, we have examined a number of other approaches capable of providing
+ a non-downtime upgrade-procedure in a replicated system and shown via contradic
+tion, why some of them would be inadequate for selected, common database-modifyi
+ng procedures.
+ Though used as an initial approach for the upgrade, we were unsuccessful
+ in utilizing the most promising method of leveraging database-reflection
+ interfaces.
+\end_layout
+
 \begin_layout Subsection
 Future work
+\end_layout
+
+\begin_layout Standard
+Although the approach with GORDA proved to be unfeasible in this scope,
+ different methods to leverage the reflections from database-internals to
+ provide upgrades as a service are still to be examined.
+ Another possible ways to get sufficient data could be to hook up into existing
+ database replication protocols or into the binary-logs used by the said
+ replication protocols.
+\end_layout
+
+\begin_layout Standard
+And even if the other introduced methods to perform upgrades externally
+ in replicated environments are not generalizible, we have still to examine
+ whether they might be sufficient for individual cases such as the MediaWiki
+ upgrade presented.
+ Especially given the simplicity of rerouting high-level application calls
+ for replicated cloud-servers, designing upgrades to support it could prove
+ to be a decent engineering practice for online-services.
 \end_layout
 
 \begin_layout Standard
