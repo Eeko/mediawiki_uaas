@@ -273,7 +273,7 @@ The program components are as follows:
 main() method executing the translator-program from translator.py.
 \item translator.py -- Contains the logic needed to use the query-log parser
 program (parser.py), how to interpret its returns and to translate
-them into SQL-queries writable by the database-hookup component. (mysql\_connect.py)
+them into SQL-queries writable by the database-hookup component. (mysql\-connect.py)
 \item parser.py -- Contains the logic required to detect and parse relevant
 INSERT and UPDATE queries from MySQL query-logs. The lines we wish
 to detect are the ones making article-updating modifications into
@@ -589,9 +589,11 @@ history of said items. An upgrade would be done with the following
 SQL-code:
 
 \inputencoding{latin9}\begin{lstlisting}
--- Note, that the primary id's of the table are auto-incremented.
--- This is similar to how Mediawiki 1.4 to 1.5 upgrade handles the 
--- database-flatten operation.
+-- Note, that the primary id's of the table are
+-- auto-incremented.
+-- This is similar to how Mediawiki 
+-- upgrade handles the database-flatten 
+-- operation.
 INSERT INTO "old" (old_content, old_link_to_cur) 
 	SELECT (old_content, old_id)
 	FROM "old";
@@ -637,7 +639,8 @@ INSERT INTO "old" (old_content, old_link_to_cur)
 	FROM "olddb.old"
 	WHERE timestamp > last_update_time;
 
--- Then we flatten the items from the table of current states
+-- Then we flatten the items from the table of 
+-- current states
 INSERT INTO "old" (old_content, old_link_to_cur)
 	SELECT (old_content, old_link_to_cur)
 	FROM "olddb.cur"

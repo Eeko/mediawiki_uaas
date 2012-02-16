@@ -639,7 +639,8 @@ update_mediawiki.py -- The entry-point of the program.
 translator.py -- Contains the logic needed to use the query-log parser program
  (parser.py), how to interpret its returns and to translate them into SQL-queries
  writable by the database-hookup component.
- (mysql_connect.py)
+ (mysql\SpecialChar \-
+connect.py)
 \end_layout
 
 \begin_layout Itemize
@@ -1481,17 +1482,27 @@ status open
 
 \begin_layout Plain Layout
 
--- Note, that the primary id's of the table are auto-incremented.
+-- Note, that the primary id's of the table are
 \end_layout
 
 \begin_layout Plain Layout
 
--- This is similar to how Mediawiki 1.4 to 1.5 upgrade handles the 
+-- auto-incremented.
 \end_layout
 
 \begin_layout Plain Layout
 
--- database-flatten operation.
+-- This is similar to how Mediawiki 
+\end_layout
+
+\begin_layout Plain Layout
+
+-- upgrade handles the database-flatten 
+\end_layout
+
+\begin_layout Plain Layout
+
+-- operation.
 \end_layout
 
 \begin_layout Plain Layout
@@ -1806,7 +1817,12 @@ INSERT INTO "old" (old_content, old_link_to_cur)
 
 \begin_layout Plain Layout
 
--- Then we flatten the items from the table of current states
+-- Then we flatten the items from the table of 
+\end_layout
+
+\begin_layout Plain Layout
+
+-- current states
 \end_layout
 
 \begin_layout Plain Layout
