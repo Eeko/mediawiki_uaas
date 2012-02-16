@@ -41,7 +41,8 @@ service applications without usage downtime by leveraging the possibilities
 of using on-demand computing resources provided by Infrastructure
 as a Service -providers. Common example of such application would
 be a public web-service requiring high availability for user, yet
-utilizing centrally maintained server architechture for operation.
+utilizing centrally maintained server architechture for operation. 
+
 Within the study we produced a feature-limited prototype of a a tool
 intended for providing a live-upgrade from MediaWiki 1.4 to 1.5. Which
 originally required over 22 hours of write-locking to the system when
@@ -595,8 +596,8 @@ SQL-code:
 -- upgrade handles the database-flatten 
 -- operation.
 INSERT INTO "old" (old_content, old_link_to_cur) 
-	SELECT (old_content, old_id)
-	FROM "old";
+	SELECT (cur_content, cur_id)
+	FROM "cur";
 \end{lstlisting}
 \inputencoding{utf8}
 
@@ -635,7 +636,7 @@ like this:
 \inputencoding{latin9}\begin{lstlisting}
 -- We first apply the modifications from old-table
 INSERT INTO "old" (old_content, old_link_to_cur)
-	SELECT (old_content, cur_id)
+	SELECT (old_content, old_link_to_cur)
 	FROM "olddb.old"
 	WHERE timestamp > last_update_time;
 

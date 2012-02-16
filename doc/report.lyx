@@ -1516,12 +1516,12 @@ INSERT INTO "old" (old_content, old_link_to_cur)
 
 \begin_layout Plain Layout
 
-	SELECT (old_content, old_id)
+	SELECT (cur_content, cur_id)
 \end_layout
 
 \begin_layout Plain Layout
 
-	FROM "old";
+	FROM "cur";
 \end_layout
 
 \begin_layout Plain Layout
@@ -1802,7 +1802,7 @@ INSERT INTO "old" (old_content, old_link_to_cur)
 
 \begin_layout Plain Layout
 
-	SELECT (old_content, cur_id)
+	SELECT (old_content, old_link_to_cur)
 \end_layout
 
 \begin_layout Plain Layout
