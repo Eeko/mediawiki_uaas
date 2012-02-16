@@ -415,7 +415,7 @@ page_latest
 placement h
 wide false
 sideways false
-status collapsed
+status open
 
 \begin_layout Plain Layout
 \align center
@@ -817,9 +817,9 @@ GORDA Open Replication of DAtabases
 
 \end_inset
 
- database replication architecture
+
 \begin_inset Foot
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \begin_inset Flex URL
@@ -837,20 +837,12 @@ http://gorda.di.uminho.pt/
 
 \end_inset
 
-.
+ database replication architecture.
  GORDA is a set of extensions for a range of RDBMS's offering an external
  API-access and for the inner workings of the databases.
  Most common RDBMS's offer a number of reflective interfaces, such as the
  used query-logger and described binary-loggers -- but they often fall short
- with certain atomicity features in distributed setups
-\begin_inset CommandInset citation
-LatexCommand cite
-key "Carvalho_onthe"
-
-\end_inset
-
-.
- 
+ with certain atomicity features in distributed setups.
 \begin_inset Foot
 status open
 
@@ -858,6 +850,13 @@ status open
 Such as the visibility of commit-order and capabilities to view and influence
  the client commits.
 \end_layout
+
+\end_inset
+
+ 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Carvalho_onthe"
 
 \end_inset
 
@@ -877,7 +876,7 @@ Which was done by the query-parser of our implementation.
 \end_inset
 
  and it would provide a programmable interface capable of instructing the
- parallel database
+ parallel database.
 \begin_inset Foot
 status open
 
@@ -887,9 +886,9 @@ Done in the translator and connector classes of our solution.
 
 \end_inset
 
-.
  This would all be done within the extended databases where the atomicity
  and reflection-reliability issues would be handled by GORDA.
+ 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "DBLP:dblp_conf/nca/CorreiaPRCVOG07"
@@ -955,7 +954,7 @@ After approximately 120 hours of development.
 
 \end_inset
 
- the risks and time required with additional unknown development obstacles
+ the risk probability and time required for additional unknown obstacles
  were considered too high.
 \end_layout
 
@@ -1095,7 +1094,7 @@ on to account the inconsistency in the parallel universe.
 placement H
 wide false
 sideways false
-status collapsed
+status open
 
 \begin_layout Plain Layout
 \align center

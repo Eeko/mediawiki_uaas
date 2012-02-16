@@ -393,25 +393,26 @@ the online-upgrade were speculated of and experimented with.
 One approach we experimented with was trying to leverage an existing
 database-reflection infrastructure. Namely, the GORDA%
 \footnote{GORDA Open Replication of DAtabases%
-} database replication architecture%
+}%
 \footnote{\url{http://gorda.di.uminho.pt/}%
-}. GORDA is a set of extensions for a range of RDBMS's offering an
-external API-access and for the inner workings of the databases. Most
-common RDBMS's offer a number of reflective interfaces, such as the
-used query-logger and described binary-loggers -- but they often fall
-short with certain atomicity features in distributed setups\cite{Carvalho_onthe}.
+} database replication architecture. GORDA is a set of extensions for
+a range of RDBMS's offering an external API-access and for the inner
+workings of the databases. Most common RDBMS's offer a number of reflective
+interfaces, such as the used query-logger and described binary-loggers
+-- but they often fall short with certain atomicity features in distributed
+setups.%
 \footnote{Such as the visibility of commit-order and capabilities to view and
 influence the client commits.%
-}
+} \cite{Carvalho_onthe}
 
 GORDA would help us by providing us the necessary infrastructure for
 reflecting the database interactions %
 \footnote{Which was done by the query-parser of our implementation.%
 } and it would provide a programmable interface capable of instructing
-the parallel database%
+the parallel database.%
 \footnote{Done in the translator and connector classes of our solution.%
-}. This would all be done within the extended databases where the atomicity
-and reflection-reliability issues would be handled by GORDA.\cite{DBLP:dblp_conf/nca/CorreiaPRCVOG07}
+} This would all be done within the extended databases where the atomicity
+and reflection-reliability issues would be handled by GORDA. \cite{DBLP:dblp_conf/nca/CorreiaPRCVOG07}
 
 However, there proved to be a number of issues with this approach.
 First of all, the most mature implementation of GORDA and with MediaWiki
@@ -435,7 +436,7 @@ requirements for continuing with the approach. Some issues figured
 out could be circumvented by reconfiguring the application but at
 the stage of abandoning the approach%
 \footnote{After approximately 120 hours of development.%
-} the risks and time required with additional unknown development obstacles
+} the risk probability and time required for additional unknown obstacles
 were considered too high.
 
 
