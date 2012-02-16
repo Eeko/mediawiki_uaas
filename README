@@ -2,7 +2,7 @@ Mediawiki Upgrade-as-a-Service
 
 A semester-project for Institut Eurecom (http://www.eurecom.fr/). Aims to demonstrate an online-upgrade of a popular web-service (Wikipedia) with a major database-schema change without downtime use.
 
-Check out the project report in the /doc/ -folder for a summary of work. A demonstration of the software should be coming soon...
+Check out the project report in the /doc/ -folder for a summary of work. A demonstration/tutorial video of a live system is available at http://youtu.be/xwqOBv4cOn0
 
 Eetu Korhonen, 2011
 
