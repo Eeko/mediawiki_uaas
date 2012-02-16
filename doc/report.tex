@@ -36,13 +36,19 @@
 
 \url{http://github.com/Eeko/mediawiki_uaas/}
 \begin{abstract}
-This report examines several ways to perform upgrades for service
-applications without usage downtime by leveraging the possibilities
+This report examines several concepts of performing upgrades for real-time
+service applications without usage downtime by leveraging the possibilities
 of using on-demand computing resources provided by Infrastructure
-as a Service -providers. The study has produced a proof-of-concept
-of a a tool capable of providing a limited live-upgrade from MediaWiki
-1.4 to 1.5, originally requiring over 22 hours of write-locking to
-the system when it was applied to Wikipedia in 2005.
+as a Service -providers. Common example of such application would
+be a public web-service requiring high availability for user, yet
+utilizing centrally maintained server architechture for operation.
+Within the study we produced a feature-limited prototype of a a tool
+intended for providing a live-upgrade from MediaWiki 1.4 to 1.5. Which
+originally required over 22 hours of write-locking to the system when
+it was applied into the English Wikipedia in 2005. In addition of
+building the tool, we explored a set of possible approaches to easen
+the availability problem during the upgrade and the innate challenges
+with implementing and using said approaches.
 \end{abstract}
 
 \section{Introduction}
@@ -56,6 +62,30 @@ flexible cloud-infrastructure to provide online service updates with
 very little or no downtime for the end-user. The project was directed
 by Dr. Tudor Dumitras from Symantec Research Labs and supervised by
 Prof. Marc Dacier from EURECOM.
+
+In the study, we first define the problem of performing service upgrades
+without downtime and introduce the concept of using on-demand computing
+resources for providing flexible capability to trade system downtime
+to temporary computing resources. We also examine the case of Wikipedia
+1.4 to 1.5 upgrade in 2005, where the significant table-restructurings
+originally required a 22 hour write-lock in operations.
+
+For this problem, we present a prototype for a software performing
+capable of tackling a small subproblem of the said upgrade without
+requiring a write-lock in the original system. Namely we present a
+program which translates an article upgrade in the old 1.4 schema
+to the new 1.5 schema running in a replicated computing environment.
+The implementation showed a number of limitations, such as the requirement
+of translating much of the application logic to a format understandable
+by the translator and the need for reasoning logic due to the limited
+information in the data sources.
+
+After describing the software created, we examine some of the alternate
+approaches explored along the project and the issues encountered with
+them. Much of the focus with these approaches are beyond just upgrading
+an individual application (MediaWiki), but in viewing them in greater
+generalization and why they can be infeasible for larger, more comlex
+and less robust programs.
 
 
 \section{Problem}
@@ -251,8 +281,34 @@ an original MediaWiki 1.4 database.
 \item mysql\_connect.py -- Helper methods used to interact with a MySQL
 database.
 \end{itemize}
+Developing the software stack from scratch in its current form took
+from a single pre-intermediate programmer approximately 80 hours of
+research and development time. Though it is to be noted that most
+of the time was spent in getting familiar with the less understood
+portions of the toolset and the system undergoing the upgrade. Most
+of the time allocated for this project (totalling to approximately
+250 hours) was spent exploring the problem and the other described
+approaches for it.
+
+I estimate that doing a similar deployment with full feature set within
+similarly limited application could be done in less than 300 hours
+with distributed work and decent professionals. Much of the work required
+would be with testing against other use-cases and developing rules
+for the architecture to parse. Most of my proof-of-concept programming
+were about the necessary infrastructure in parsing relevant queries
+and working the communication between the systems. The individual
+translations and query-detection still needed can benefit from a robust
+infrastructure, reducing the amount of programming work in the end
+parts. Much of the labour could also substitute the work needed to
+do the regular upgrade. The standard upgrading schema could be made
+to utilize translation rules compatible with the real-time updating
+procedure.
+
 
 \subsection{Problems with the implementation}
+
+
+\subsubsection{Case-specific}
 
 Our query-detector and translator approach mainly requires us to understand
 and re-implement large portions of the application logic within an
@@ -263,13 +319,16 @@ framework. More notably, individual upgrade-instructions are not recyclable
 for other upgrades; neither can we leverage the existing SQL-upgrade
 instructions to automate the logic-programming.
 
-Another issue is the limits of the data extractable from the query
+
+\subsubsection{Query-logs as a data source}
+
+Another issue are the limits of the data extractable from the query
 logs. Much of the details ending up to the database can be programmed
 and computed to be performed by the database itself without necessarily
 revealing them in the query logs E.g. generating entries via database-triggers
-and the auto-incrementations of id's are usually done within the database
-and can't be read from default query-logs. In the lower levels the
-database may perform optimizations or transaction aborts not necessarily
+and the auto-incrementations of id's are sometimes done within the
+database and can't be read from default query-logs. In the lower levels
+the database may perform optimizations or transaction aborts not necessarily
 visible to the logs. Or they can be insufficiently hard to predict
 and react for in large scale parsing. For adequate understanding of
 the workings of the database, the visible plain-text query-logs are
@@ -286,26 +345,33 @@ tests for schema-equivalence, one can use standard database-replication
 suites to duplicate the relevant infrastructure to match the existing
 system.
 
+
+\subsubsection{Inefficiency and fault tolerance}
+
 The implementation looks into the updates as individual transaction
 one at a time, which is necessary as the program simulates a working
 application performing similar actions in a live use scenario. This
 is hardly efficient for larger data sets and is somewhat error prone;
 should there be unexpected modifications (such as manual inserts)
-to the database not detectable by the developed application. Another
-way would be to use the query-logs to create records of data requiring
-action after a stage of upgrade has been completed. For example, two
-updates to the same article could be marked as a single entry to a
-table of ``touched'' article-id's. Then we make a external query
-to the original database to stream the necessary changes into the
-parallel universe. This does not free us from implementing some application
-logic, as actions such as deleting rows or modifying their unique
-id's would have to be represented in the tracking logic of tainted-entries.
-Neither is it granted that the query-logs available present us with
-enough data to identify the tainted items. For example, an INSERT-query
-might enter their unique id as NULL and auto-increment it in the database
-or application-logic. Such incrementation based on the MAX(ID)-value
-of the new flattened text-table of MediaWiki 1.5 was required in our
-implementation.
+to the database not detectable by the developed application. 
+
+Another way would be to use the query-logs to create records of data
+requiring action after a stage of upgrade has been completed. For
+example, two updates to the same article could be marked as a single
+entry to a table of ``touched'' article-id's. Then we make a external
+query to the original database to stream the necessary changes into
+the parallel universe. This does not free us from implementing some
+application logic, as actions such as deleting rows or modifying their
+unique id's would have to be represented in the tracking logic of
+tainted-entries. Neither is it granted that the query-logs available
+present us with enough data to identify the tainted items. For example,
+an INSERT-query might enter their unique id as NULL and auto-increment
+it in the database or application-logic. Such incrementation based
+on the MAX(ID)-value of the new flattened text-table of MediaWiki
+1.5 was required in our implementation.
+
+
+\subsubsection{Limitations of virtualization technology}
 
 It is necessary to note that the current implementation does not manage
 fully without downtime, since creating an identical real-time duplicate
@@ -325,42 +391,52 @@ the online-upgrade were speculated of and experimented with.
 \subsection{Using existing database-replication}
 
 One approach we experimented with was trying to leverage an existing
-database-reflection infrastructure. Initially, the GORDA database
-replication toolkit%
+database-reflection infrastructure. Namely, the GORDA%
+\footnote{GORDA Open Replication of DAtabases%
+} database replication architecture%
 \footnote{\url{http://gorda.di.uminho.pt/}%
-} showed much promise. With a flexible middleware providing accurate
-reflections and access to the inner workings of the database, we would
-be assured to have all the necessary data needed for keeping track
-of the changes during the upgrade. Ideally we could use similar architecture
-used for redundancy replications of a database and modify their outputs
-in a way which would accommodate for the changes in database schema.
-GORDA promised to offer a flexible API to those reflections given
-that we'd use a supported database.\cite{DBLP:dblp_conf/nca/CorreiaPRCVOG07}
+}. GORDA is a set of extensions for a range of RDBMS's offering an
+external API-access and for the inner workings of the databases. Most
+common RDBMS's offer a number of reflective interfaces, such as the
+used query-logger and described binary-loggers -- but they often fall
+short with certain atomicity features in distributed setups\cite{Carvalho_onthe}.
+\footnote{Such as the visibility of commit-order and capabilities to view and
+influence the client commits.%
+}
+
+GORDA would help us by providing us the necessary infrastructure for
+reflecting the database interactions %
+\footnote{Which was done by the query-parser of our implementation.%
+} and it would provide a programmable interface capable of instructing
+the parallel database%
+\footnote{Done in the translator and connector classes of our solution.%
+}. This would all be done within the extended databases where the atomicity
+and reflection-reliability issues would be handled by GORDA.\cite{DBLP:dblp_conf/nca/CorreiaPRCVOG07}
 
 However, there proved to be a number of issues with this approach.
-First of all, the tried toolkit for GORDA somewhat compatible with
-MediaWiki was one hooking up into PostgreSQL database. For MediaWiki
-1.4, the PostgreSQL -support was considered to be ``experimental''
-and it was recommended to use MySQL for production database. After
-the schema upgrade in 1.5, the PostgreSQL-support was officially discarded,
+First of all, the most mature implementation of GORDA and with MediaWiki
+was one hooking up into a PostgreSQL database. For MediaWiki 1.4,
+the PostgreSQL -support was considered to be ``experimental'' and
+it was recommended to use MySQL for production database. After the
+schema upgrade in 1.5, the PostgreSQL-support was officially discarded,
 though the unmodified components were still within the source code.
 Making the software run on PostgreSQL (or Apache Derby, which is ``default''
 database for GORDA) requires a number of extra modifications.
 
-Secondly, GORDA itself have more or less been abandoned recently.
-The documentation is in inconsistent state and in some cases become
-completely unavailable. For example, the documentation wiki of Escada
-Replication Server (which is required by later versions of GORDA)
-has disappeared since. Utilizing GORDA proved to require a tremendous
-amount of reverse engineering, which became even more troublesome
-as the database-hookup components lacked a number of important features,
-such as namespaces for database tables.
-
-Should GORDA have worked and if we'd had enough time to figure out
-how to port MediaWiki 1.5 to PostgreSQL or another more supported
-database, it would definitely solve many problems imminent with our
-other approaches. Such as the consistency problems with application-call
-or incremental standard upgrading for renewing database subsets. 
+Secondly, GORDA itself is still on a prototype stage. Orienting into
+it and extending it to fit the system at stake proved to be infeasible
+within the scope and skill level involved with the project. The most
+time-consuming issues being that the current prototype showed to lack
+support for a number of features%
+\footnote{Such as namespace support in table naming.%
+} and necessary documentation. This project did not manage to examine
+the GORDA system enough to give estimates on the difficulty and time
+requirements for continuing with the approach. Some issues figured
+out could be circumvented by reconfiguring the application but at
+the stage of abandoning the approach%
+\footnote{After approximately 120 hours of development.%
+} the risks and time required with additional unknown development obstacles
+were considered too high.
 
 
 \subsection{Using similarity in application calls}
@@ -451,27 +527,39 @@ An intuitive way for such division would be to split the dataset under
 update by their timestamps, so that we only re-run the standard upgrade
 script for new items inserted after the last known item in the databases
 under upgrade was received. However, under some upgrades this will
-provide and incompatible and possibly broken result due to the unpredictability
-of the live-system updates.
+provide and incompatible and possibly broken consistency due to the
+unpredictability of the live-system updates.
 
 \medskip{}
 
 
-In an example, we have a database of two tables representing a list
-of current states and saved histories of those states:
+MediaWiki 1.4 used two separate tables to represent articles (cur-table)
+and their revision history (old-table). The tables contain mostly
+similar information allowing the history to be formed by mostly copying
+the old contents of cur-table to be archived in old-table. The upgrade
+in MediaWiki 1.5 system combines these and splits them into three
+tables containing different logical fractions of the same data.
+
+In our example, we have generalized the first combining operation
+into a higher abstraction of state-entries (``cur'', as in MediaWiki
+1.4) and history-entries (``old'', as in MediaWiki 1.4). Every history
+entry has a foreign key pointer to a corresponding current state.
+Performing incremental joins within this kind of database leads into
+an inconsistent state compared to a singular batch operation done
+with similar joins.
 
 \begin{table}[h]
 \centering{}%
 \begin{tabular}{|c|c|}
 \hline 
-state\_id & state\_content\tabularnewline
+cur\_id & cur\_content\tabularnewline
 \hline 
 \hline 
 1 & 1\_Fourth\_state\tabularnewline
 \hline 
 2 & 2\_Second\_state\tabularnewline
 \hline 
-\end{tabular}\caption{State-table}
+\end{tabular}\caption{Current states -table (cur-table)}
 \end{table}
 
 
@@ -479,7 +567,7 @@ state\_id & state\_content\tabularnewline
 \centering{}%
 \begin{tabular}{|c|c|c|}
 \hline 
-history\_id & history\_content & history\_link\_to\_state\tabularnewline
+old\_id & old\_content & old\_link\_to\_cur\tabularnewline
 \hline 
 \hline 
 1 & 1\_First\_state & 1\tabularnewline
@@ -490,7 +578,7 @@ history\_id & history\_content & history\_link\_to\_state\tabularnewline
 \hline 
 4 & 1\_Third\_state & 1\tabularnewline
 \hline 
-\end{tabular}\caption{History-table}
+\end{tabular}\caption{Old states history -table (old-table)}
 \end{table}
 
 
@@ -503,9 +591,9 @@ SQL-code:
 -- Note, that the primary id's of the table are auto-incremented.
 -- This is similar to how Mediawiki 1.4 to 1.5 upgrade handles the 
 -- database-flatten operation.
-INSERT INTO "history" (history_content, history_link_to_state) 
-	SELECT (state_content, state_id)
-	FROM "state";
+INSERT INTO "old" (old_content, old_link_to_cur) 
+	SELECT (old_content, old_id)
+	FROM "old";
 \end{lstlisting}
 \inputencoding{utf8}
 
@@ -515,7 +603,7 @@ After the update, the new table would look like this:
 \centering{}%
 \begin{tabular}{|c|c|c|}
 \hline 
-history\_id & history\_content & history\_link\_to\_state\tabularnewline
+old\_id & old\_content & old\_link\_to\_cur\tabularnewline
 \hline 
 \hline 
 1 & 1\_First\_state & 1\tabularnewline
@@ -530,7 +618,7 @@ history\_id & history\_content & history\_link\_to\_state\tabularnewline
 \hline 
 6 & 2\_Second\_state & 2\tabularnewline
 \hline 
-\end{tabular}\caption{Merged history-table}
+\end{tabular}\caption{Merged old-table}
 \end{table}
 
 
@@ -542,16 +630,16 @@ after we begun merging our previous entries. The code would work something
 like this:
 
 \inputencoding{latin9}\begin{lstlisting}
--- We first apply the modifications from history-table
-INSERT INTO "history" (history_content, history_link_to_state)
-	SELECT (history_content, state_id)
-	FROM "olddb.history"
+-- We first apply the modifications from old-table
+INSERT INTO "old" (old_content, old_link_to_cur)
+	SELECT (old_content, cur_id)
+	FROM "olddb.old"
 	WHERE timestamp > last_update_time;
 
 -- Then we flatten the items from the table of current states
-INSERT INTO "history" (history_content, history_link_to_state)
-	SELECT (state_content, history_link_to_state)
-	FROM "olddb.state"
+INSERT INTO "old" (old_content, old_link_to_cur)
+	SELECT (old_content, old_link_to_cur)
+	FROM "olddb.cur"
 	WHERE timestamp > last_update_time;
 \end{lstlisting}
 \inputencoding{utf8}
@@ -562,7 +650,7 @@ Then when we would receive the following rows into the database:
 \begin{centering}
 \begin{tabular}{|c|c|c|}
 \hline 
-history\_id & history\_content & history\_link\_to\_state\tabularnewline
+old\_id & old\_content & old\_link\_to\_cur\tabularnewline
 \hline 
 \hline 
 5 & 3\_First\_state & 3\tabularnewline
@@ -570,13 +658,13 @@ history\_id & history\_content & history\_link\_to\_state\tabularnewline
 \end{tabular}
 \par\end{centering}
 
-\centering{}\caption{New row in history-table inserted during the update}
+\centering{}\caption{New row in old-table inserted during the update}
 \end{table}
 \begin{table}[H]
 \begin{centering}
 \begin{tabular}{|c|c|}
 \hline 
-state\_id & state\_content\tabularnewline
+cur\_id & cur\_content\tabularnewline
 \hline 
 \hline 
 3 & 3\_Second\_state\tabularnewline
@@ -584,7 +672,7 @@ state\_id & state\_content\tabularnewline
 \end{tabular}
 \par\end{centering}
 
-\centering{}\caption{New row in state-table inserted during the update}
+\centering{}\caption{New row in cur-table inserted during the update}
 \end{table}
 
 
@@ -594,7 +682,7 @@ We would end up with a merged table looking like the following:
 \centering{}%
 \begin{tabular}{|c|c|c|}
 \hline 
-history\_id & history\_content & history\_link\_to\_state\tabularnewline
+old\_id & old\_content & old\_link\_to\_cur\tabularnewline
 \hline 
 \hline 
 1 & 1\_First\_state & 1\tabularnewline
@@ -613,7 +701,7 @@ history\_id & history\_content & history\_link\_to\_state\tabularnewline
 \hline 
 8 & 3\_Second\_state & 3\tabularnewline
 \hline 
-\end{tabular}\caption{Merged history-table after incremental upgrade}
+\end{tabular}\caption{Merged old-table after incremental upgrade}
 \end{table}
 
 
@@ -626,7 +714,7 @@ this:
 \centering{}%
 \begin{tabular}{|c|c|c|}
 \hline 
-history\_id & history\_content & history\_link\_to\_state\tabularnewline
+old\_id & old\_content & old\_link\_to\_cur\tabularnewline
 \hline 
 \hline 
 1 & 1\_First\_state & 1\tabularnewline
@@ -645,7 +733,7 @@ history\_id & history\_content & history\_link\_to\_state\tabularnewline
 \hline 
 8 & 3\_Second\_state & 3\tabularnewline
 \hline 
-\end{tabular}\caption{Merged-history table without online-upgrading}
+\end{tabular}\caption{Merged-old table without online-upgrading}
 \end{table}
 
 
@@ -655,33 +743,22 @@ without the necessary modifications, we will encounter in faulty behaviour.
 To fix this, we need to implement some amount of application- or database-logic
 to upgrade corresponding tables with history\_id references.
 
-
-\section{Conclusions}
-
-The implementation provided fails in its initial goal of performing
-an online upgrade in a scale comparable to a real-life use scenario.
-(I.e. the entire Wikipedia and updates performed to it during the
-upgrade.) Though it manages to illustrate the difficulties in the
-approach. Namely the requirement to model much of the application
-logic within the mapper and the unreliabliness of the used data-source.
-(Human readable query-logs from MySQL.)
-
-In addition, we have examined a number of other approaches capable
-of providing a non-downtime upgrade-procedure in a replicated system
-and shown via contradiction, why some of them would be inadequate
-for selected, common database-modifying procedures. Though used as
-an initial approach for the upgrade, we were unsuccessful in utilizing
-the most promising method of leveraging database-reflection interfaces.
+This would likely not be a problem within the MediaWiki, since the
+id's are supposedly used only for separating primary id's from each
+other and the supposed order carries no significance. However, inconsistency
+of incrementation might be an issue in some programs. Such as ones
+requiring predictable consistency with FETCH FIRST {[}N{]} -queries\cite{iso9075-3}
+for unordered data or non-standard SQL such as TOP or LIMIT -syntaxes.
 
 
-\subsection{Future work}
+\section{Future work}
 
 Although the approach with GORDA proved to be unfeasible in this scope,
 different methods to leverage the reflections from database-internals
-to provide upgrades as a service are still to be examined. Another
-possible ways to get sufficient data could be to hook up into existing
-database replication protocols or into the binary-logs used by the
-said replication protocols.
+to provide upgrades as a service are still to be examined. Other possibilities
+to get sufficient data could be to hook up into existing database
+replication protocols or into the binary-logs used by the said replication
+protocols.
 
 And even if the other introduced methods to perform upgrades externally
 in replicated environments are not generalizible, we have still to
@@ -690,6 +767,32 @@ as the MediaWiki upgrade presented. Especially given the simplicity
 of rerouting high-level application calls for replicated cloud-servers,
 designing upgrades to support it could prove to be a decent engineering
 practice for online-services.
+
+Though this study does not help much with re-trying the GORDA-route,
+one could examine the costs of extending the database replication
+protocols to suit dynamic modifications to the queries and for presenting
+more detailed views on the interactions to support an upgrade-compatible
+replication procedure.
+
+
+\section{Conclusions}
+
+The implementation provided falls short with the initial goal of performing
+an online upgrade in a scale comparable to a real-life use scenario.
+(I.e. the entire Wikipedia and updates performed to it during the
+upgrade.) Though we manage to explore illustrate several approaches
+for the task and the challenges involved. Mostly relating with the
+need to model much of the application logic within the mapper and
+the unreliabliness of the used data-source. For which the former would
+be solvable by being able to utilize the upgrading schema in a suitable
+framework and applications and for the latter 
+
+In addition, we have examined a number of other approaches capable
+of providing a non-downtime upgrade-procedure in a replicated system
+and shown via contradiction, why some of them would be inadequate
+for selected, common database-modifying procedures. Though used as
+an initial approach for the upgrade, we were unsuccessful in utilizing
+the most promising method of leveraging database-reflection interfaces.
 
 \bibliographystyle{plain}
 \bibliography{sources}
