@@ -131,7 +131,11 @@ This report examines several concepts of performing upgrades for real-time
  Common example of such application would be a public web-service requiring
  high availability for user, yet utilizing centrally maintained server architech
 ture for operation.
- Within the study we produced a feature-limited prototype of a a tool intended
+ 
+\end_layout
+
+\begin_layout Abstract
+Within the study we produced a feature-limited prototype of a a tool intended
  for providing a live-upgrade from MediaWiki 1.4 to 1.5.
  Which originally required over 22 hours of write-locking to the system
  when it was applied into the English Wikipedia in 2005.
