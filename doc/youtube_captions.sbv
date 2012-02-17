@@ -1,0 +1,602 @@
+0:00:00.969,0:00:02.780
+Greetings
+
+0:00:02.780,0:00:07.899
+This is a pre-recorded screencast for my
+prototype of an "upgrade as a service" done as a
+
+0:00:07.899,0:00:10.020
+semester project during the fall
+
+0:00:10.020,0:00:11.589
+to 2011
+
+0:00:11.589,0:00:12.440
+for
+
+0:00:12.440,0:00:16.340
+EURECOM in Sophia Antipolis, France
+
+0:00:16.340,0:00:20.580
+This pre-recorded screencast is
+intended to be available in youtube in
+
+0:00:20.580,0:00:21.470
+order
+
+0:00:21.470,0:00:24.679
+be prepared for unexpected technical
+difficulties
+
+0:00:24.679,0:00:26.890
+during the project defense
+
+0:00:26.890,0:00:31.539
+and to provide additional hands on
+documentation and record of what I produced
+
+0:00:31.539,0:00:36.500
+during the semester
+
+0:00:36.500,0:00:39.210
+so without further introduction
+
+0:00:39.210,0:00:44.280
+Here we can't see the initial
+infrastructure of the set-up
+
+0:00:44.280,0:00:50.240
+as you can see, i'm running a few elastic
+computing instances in Amazon EC2
+
+0:00:50.240,0:00:54.930
+one of the instances contains the mysql
+database and necessary frontend
+
+0:00:54.930,0:00:57.010
+software we wish to replicate
+
+0:00:57.010,0:00:59.990
+and upgrade into the new version
+
+0:00:59.990,0:01:03.120
+and as you can see here we have a up and
+running
+
+0:01:03.120,0:01:06.920
+http-server facing the
+public network
+
+0:01:06.920,0:01:10.590
+and we can work with it
+like
+
+0:01:10.590,0:01:14.800
+any other standard MediaWiki
+installation.
+
+0:01:14.800,0:01:17.180
+And insert data there as you can see.
+
+0:01:17.180,0:01:18.230
+---
+
+0:01:18.230,0:01:22.050
+uh... it's a pretty much just a
+standard MediaWiki
+
+0:01:22.050,0:01:26.720
+the other computer here acts as an
+external control node
+
+0:01:26.720,0:01:30.389
+which is used to provide necessary
+instructions and setups
+
+0:01:30.389,0:01:32.010
+for the computing cloud
+
+0:01:32.010,0:01:36.090
+for the original system under replication
+and for the
+
+0:01:36.090,0:01:40.409
+new dynamically created parallel
+universe instance going through the
+
+0:01:40.409,0:01:43.670
+upgrade
+
+0:01:43.670,0:01:47.820
+so here we have connected into our 
+control-computer
+
+0:01:47.820,0:01:52.200
+giving us our friendly log-in echo as we
+open new shells
+
+0:01:52.200,0:01:56.840
+it does not run in much of a 
+specialized software except for
+
+0:01:56.840,0:02:02.040
+configured EC2-tools needed to interact
+interact with Amazon Elastic computing
+
+0:02:02.040,0:02:03.730
+cloud
+
+0:02:03.730,0:02:09.609
+Over here we can see the GIT
+clone from our software repository
+
+0:02:09.609,0:02:13.459
+it's practically a direct pull from the
+latest version
+
+0:02:13.459,0:02:16.559
+which you can download from the project
+GitHub-page
+
+0:02:16.559,0:02:20.929
+but we have also made our customizations
+to the config files
+
+0:02:20.929,0:02:24.790
+just the state some database
+access details
+
+0:02:24.790,0:02:27.879
+needed for a replication in EC2
+
+0:02:27.879,0:02:30.149
+we have also run this
+
+0:02:30.149,0:02:35.229
+a few times so there might be a few
+extra dynamically generated files
+
+0:02:35.229,0:02:36.999
+here and there
+
+0:02:36.999,0:02:38.699
+which will be
+
+0:02:38.699,0:02:43.150
+getting overwritten as we go.
+
+0:02:43.150,0:02:47.989
+And in the program folders we
+have the necessary scripts needed to
+
+0:02:47.989,0:02:50.499
+perform the upgrade
+
+0:02:50.499,0:02:53.239
+And now I'm going to show you a
+
+0:02:53.239,0:02:54.659
+sample execution
+
+0:02:54.659,0:03:01.659
+and try to describe what is happening
+behind the screens
+
+0:03:02.029,0:03:05.099
+so the first software we need to run
+
+0:03:05.099,0:03:10.239
+is the script creating the replica of the
+original amazon instance running mediawiki
+
+0:03:10.239,0:03:12.639
+1.4
+
+0:03:12.639,0:03:16.290
+and we can do that by just
+executing this 
+
+0:03:16.290,0:03:20.319
+"create_aws_replica.sh" tool
+
+0:03:20.319,0:03:22.590
+The tool reads the instructions from
+
+0:03:22.590,0:03:24.430
+config.conf
+
+0:03:24.430,0:03:27.390
+in order to instruct the Amazon
+EC2
+
+0:03:27.390,0:03:28.170
+to create
+
+0:03:28.170,0:03:31.459
+the identical copy of the running instance
+
+0:03:31.459,0:03:34.480
+so as I run the script
+
+0:03:34.480,0:03:39.469
+it starts to show some amount of
+information of the execution
+
+0:03:39.469,0:03:41.309
+As you see here
+
+0:03:41.309,0:03:45.629
+the output matches the information on
+the Amazon dashboard
+
+0:03:45.629,0:03:52.629
+we are replicating this instance 
+ending with "182"
+
+0:03:52.919,0:03:56.619
+it is notable that in this use
+case
+
+0:03:56.619,0:04:00.849
+that we do not manage to go entirely
+without downtime
+
+0:04:00.849,0:04:04.869
+since the architecture we used to
+create a system replica
+
+0:04:04.869,0:04:09.019
+is the one powering amazon's own image
+cloning 
+
+0:04:10.550,0:04:14.760
+we require the system to shut down
+the original system for a minute when
+
+0:04:14.760,0:04:16.879
+cloning the image
+
+0:04:16.879,0:04:22.069
+and we can see here that amazon
+is working with new disk images for
+
+0:04:22.069,0:04:28.259
+launching the replicated instances
+
+0:04:28.259,0:04:33.090
+and with a big data set such as
+wikipedia, these kind of copying would
+
+0:04:33.090,0:04:37.999
+of course make a single server system
+like the one we are running go down for some
+
+0:04:37.999,0:04:42.270
+time but for most scalable web
+applications they are designed to
+
+0:04:42.270,0:04:46.639
+withstand a number of shut downs since
+severs naturally break down and are
+
+0:04:46.639,0:04:51.669
+upgraded to handle different loads
+vertically and horizontally when you
+
+0:04:51.669,0:04:53.110
+renew the servers
+
+0:04:53.110,0:04:56.389
+servers and when you add more
+
+0:04:56.389,0:04:57.220
+servers
+
+0:04:57.220,0:05:00.680
+so we assume that in real life 
+
+0:05:00.680,0:05:04.480
+production case we can replace
+this kind of replication with traditional node
+
+0:05:04.480,0:05:11.480
+replication
+
+0:05:11.529,0:05:15.600
+okay now ask the script has finished
+running and
+
+0:05:15.600,0:05:20.630
+when we look back in the console,
+so we can now see that there's a new
+
+0:05:20.630,0:05:22.219
+instance running
+
+0:05:22.219,0:05:28.020
+instance is practically a 1:1 copy
+or clone of what the original computer
+
+0:05:28.020,0:05:29.320
+was running
+
+0:05:29.320,0:05:33.110
+before it got shut down for a few
+seconds
+
+
+0:05:35.020,0:05:39.110
+and when we get back here are street
+happens to be a nice enough to tell us
+
+0:05:39.110,0:05:41.129
+what they need to do next
+
+0:05:41.129,0:05:45.819
+so we continue by running this 
+"setup_replica.sh" which basically copies 
+the necessary
+
+0:05:45.819,0:05:48.610
+configuration and software and scripts
+
+0:05:48.610,0:05:50.120
+the new paralleled universe
+
+0:05:50.120,0:05:57.120
+so that we can start moving our
+operations there
+
+0:05:58.590,0:06:02.369
+so, let's take the connection into the 
+newly created node
+
+0:06:02.369,0:06:05.969
+you can see that the best slightly
+different hostnames and
+
+0:06:05.969,0:06:07.850
+IP's
+
+0:06:07.850,0:06:14.779
+so it's an independent clone
+as I told you before
+
+0:06:14.779,0:06:19.550
+so here we move into the instructed
+directory and follow the next steps
+
+0:06:19.550,0:06:20.770
+forward
+
+0:06:20.770,0:06:24.189
+first of all we established a "hookup"
+up to the original
+
+0:06:24.189,0:06:26.930
+user facing mediawiki installation
+
+0:06:26.930,0:06:30.039
+it's a pretty standard SSH pipe
+
+0:06:31.889,0:06:36.650
+reading the end of the mysql query log
+of the original
+
+0:06:36.650,0:06:38.839
+and in 
+
+0:06:38.839,0:06:43.729
+essence our computer here will take place is
+this replica of the original we also
+
+0:06:43.729,0:06:44.960
+have an
+
+0:06:44.960,0:06:48.440
+out to date version off this same log- 
+file
+
+0:06:48.440,0:06:51.959
+as is present in the original
+
+0:06:51.959,0:06:52.590
+node
+
+0:06:52.590,0:06:55.449
+so in order to receive only subset of
+changes
+
+0:06:55.449,0:07:00.959
+we took the line count from our query log
+which represents the state  thedatabase
+
+0:07:00.959,0:07:03.529
+was in just before it got shut down
+
+0:07:03.529,0:07:04.619
+and replicated
+
+0:07:04.619,0:07:07.569
+and just take the tail of the file
+
+0:07:07.569,0:07:10.809
+after that line number
+
+0:07:10.809,0:07:13.839
+so as I can show you
+
+0:07:13.839,0:07:18.739
+every query made in to the original
+1.4 installation since the shutdown
+
+0:07:18.739,0:07:19.580
+now
+
+0:07:19.580,0:07:21.859
+appears in the parallel node
+
+0:07:21.859,0:07:25.469
+and as we update the mediawiki
+like this we can see that the related
+
+0:07:25.469,0:07:28.119
+logs appearing in the log_cache file
+
+0:07:28.119,0:07:31.860
+the pipe creates
+
+0:07:31.860,0:07:36.499
+the second set of instructions contains
+all we need to perform the standard
+
+0:07:36.499,0:07:40.270
+write-locking upgrade from mediawiki
+1.4 to 1.5
+
+0:07:40.270,0:07:44.479
+and actually it downloads the necessary
+files from the subversion
+
+0:07:44.479,0:07:46.419
+repositories of media wiki
+
+0:07:46.419,0:07:51.179
+and copies the folder to be readable by
+our apache server
+
+0:07:51.179,0:07:55.709
+and after that it runs the necessary
+schema-changing database scripts
+
+0:07:55.709,0:08:02.709
+...and alters the configuration for
+mediawiki and apache
+
+0:08:03.169,0:08:07.680
+so I can show you that in this
+different address ah...
+
+0:08:07.680,0:08:08.560
+uh...
+
+0:08:08.560,0:08:12.340
+where we enter with our browser we
+now have another MediaWiki up and
+
+0:08:12.340,0:08:13.229
+running
+
+0:08:13.229,0:08:16.669
+the 1.5 installation has
+slightly different symbol over there on
+
+0:08:16.669,0:08:21.590
+the corner but they still running with much
+similar dataset with the old one and their
+
+0:08:21.590,0:08:25.680
+articles are pretty similar though there are
+some updates happening in that
+
+0:08:25.680,0:08:31.629
+old version because we do not
+want to writlock it
+
+0:08:31.629,0:08:32.990
+and after that
+
+0:08:32.990,0:08:37.700
+we can start the program doing the sql
+translations
+
+0:08:37.700,0:08:41.960
+these script take the log cache as a
+parameter
+
+0:08:41.960,0:08:46.790
+uh... so when this program runs it
+shows it has detected new changes in
+
+0:08:46.790,0:08:50.220
+the log-file
+
+0:08:51.370,0:08:55.560
+... right now we can see there is the
+same article modification i showed to
+
+0:08:55.560,0:09:00.300
+demonstrate the ssh-pipe 
+earlier uh... since we started the
+
+0:09:00.300,0:09:04.680
+translator the changes start appearing
+in the parallel version
+
+0:09:04.680,0:09:10.250
+and as i insert new data into this
+wiki, we can also verify
+
+0:09:10.250,0:09:17.250
+that these edits also appear to be in
+the upgraded version
+
+0:09:19.880,0:09:25.250
+so in in real life scenario this
+recording of queries and appending them
+
+0:09:25.250,0:09:29.540
+later allows us to have the old version
+receiving the user interactions
+
+0:09:29.540,0:09:32.730
+while the new parallel version works out
+
+0:09:32.730,0:09:35.200
+the upgrade uninterrupted
+
+0:09:35.200,0:09:39.770
+after the upgrade has been done we can
+"catch up" with the modifications presented
+
+0:09:39.770,0:09:41.980
+in to the old version
+
+0:09:41.980,0:09:44.730
+when the two systems are at an equivalent
+state
+
+0:09:44.730,0:09:49.300
+... one just directs the user traffic
+of the old node to point into the new node
+
+0:09:49.300,0:09:54.820
+and then we can stop using excessive
+resources in the virtualized cloud
+
+0:09:54.820,0:09:59.430
+originally allocated to the old version
+
+0:09:59.430,0:10:03.630
+by just shutting down those
+resources
+
+0:10:03.630,0:10:05.900
+so that's the screencast
+
+0:10:05.900,0:10:08.680
+for the source code and documentations
+look up
+
+0:10:08.680,0:10:12.749
+to the GitHub address on the description
+of this video and i hope uh... these
+
+0:10:12.749,0:10:16.990
+has been an enlightening experience
+for you as much as it was for me
+
+0:10:16.990,0:10:17.319
+for me.
+Thank you.
+

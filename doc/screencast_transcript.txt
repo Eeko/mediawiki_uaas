@@ -1,0 +1,183 @@
+Hello dear viewer,
+
+This is a pre-recorder screencast for my prototype of 
+an "Upgrade as a Service",
+done as a semester project during the fall of 2011 for EURECOM
+in Sophia Antipolis, France
+
+This pre-recorded screencast Intended to be available in YouTube in order to be prepared
+for unexpected technical difficulties during the project defence
+- 
+and to provide additional hands-on documentation and record
+of what I produced during the semester.
+
+...
+
+Here we can see the initial infrastructure of the setup.
+As you can see, I'm running a few elastic computing instances in Amazon EC2
+One of the instances contains the MySQL database and necessary frontend
+software we wish to replicate and upgrade into the new version.
+
+And as you can see here, we have it up and running an http-server
+facing the public network, and we can work with it 
+like any other standard MediaWiki installation.
+
+The other computer here acts as an external control node,
+which is used to provide necessary instructions and setups for the computing cloud,
+to the original system under replication,
+and for the new dynamically created
+parallel universe instance going through the upgrade.
+
+...
+
+So here we have connected into our control-computer.
+Giving us our friendly login-echo as we open shells.
+It does not run much of specialized software 
+except for the configured EC2-tools needed to interact
+with Amazon.
+
+And over here, we can see the git clone from our software repository.
+It's practically a direct pull from the latest version,
+which you can download from the project github page.
+But we have also made our customizations to the config files,
+just to state the instance and database-access details needed for
+replication in EC2.
+And we have run it a few times so there might be a few extra, 
+dynamically generated files here and there. Getting overwritten as we go.
+
+And in the program folders, we have the necessary scripts
+needed to perform the upgrade.
+And now, I'm going to show you a sample execution
+and try to describe what is happening behind the screens.
+
+
+...
+
+So First software we need to run is the script 
+creating the replica of the original Amazon instance running
+MediaWiki 1.4.
+And we can do that by just executing this "create_aws_replica.sh"
+-tool.
+The tool reads the instructions from config.conf in order to 
+instruct the amazon ec2 to create the identical copy of the running instance
+
+So, as I run the script, 
+it starts to show some amount of information of the execution. 
+As you can see here, the output matches the information on the Amazon
+dashboard. We are replicating this instance ending with "182"
+
+... 
+
+It is notable that in this use case, that
+we do not manage to go entirely without downtime. 
+Since the architecture we use to create the system replica
+is the one powering Amazon image-cloning, 
+we require the system to shutdown the original system for a minute
+for cloning the image. 
+
+And we can see here that Amazon is working with new disk-images
+for launching the replicated instances.
+
+With a big dataset such as Wikipedia, this kind of copying would
+make a single server system go down for some time.
+But most scalable web applications are designed to 
+withstand a number of shutdowns as servers break down 
+and are upgraded to handle different loads. 
+So we assume we can replace this kind of replication with traditional
+node replication in a production system.
+
+....
+
+Ok. Now as the script has finished running.
+And when we look back into the AWS console, 
+we can now see that there is a new instance runnning. 
+The instance is practically a 1:1 copy of what the original
+computer was running before it got shut down for a few seconds.
+
+Our script happens to be nice enough 
+to tell us what we need to do next.
+So we continue by running this "setup_replica.sh" which
+copies the necessary configurations, software and scripts 
+to the new parallel node
+so that we can start moving our operations over there.
+
+...
+
+So, let's take the connetion in to the newly created node.
+You can see, that it has slightly different hostnames and IP's.
+An independent clone of the original as I told you.
+
+...
+
+So here, we move into the instructed directory 
+and follow the next steps forward.
+
+First of all, we establish our "hookup" to the original, 
+user-facing MediaWiki installation.
+It's a pretty standard SSH-pipe reading the end of the MySQL query-log
+of the original.
+Since our computer is a replica of the original, we also have an out-to-date
+version of the same logfile, so in order to receive only the subset of changes,
+we take the line-count from our query log, which represents the state
+the database was in just before it got shut down and replicated.
+
+...
+
+So as I can show you, every query made into the
+ORIGINAL 1.4 installation since the shutdown now appears in the parallel node.
+As we update the mediawiki like this, 
+we can see that the related logs appear in the log_cache file the pipe creates.
+
+...
+
+
+
+The second set of instructions contains all we need to perform
+the standard, write-locking upgrade from MediaWiki 1.4 to 1.5.
+It downloads the neceessary files from Subversion-repositories.
+It copies them to folder readable by our Apache-server.
+It runs the necessary schema-changing database-scripts, 
+alters the configuration for MediaWiki and Apache.
+
+...
+
+So I can show you that in this different address, 
+we now have another MediaWiki up and running. 
+The 1.5 installation has slightly different symbol over there
+but is still running with a similar dataset with the old one.
+
+...
+
+After that, we can start the program doing the SQL translations.
+ ---
+ This script takes the log_cache as a parameter...
+So when this program is run, it shows it has detected some 
+new changes in the log-file. 
+It is the same article modification I showed
+to demonstrate the SSH-pipe earlier. Since we started the translator, 
+the changes start appearing in the parallel version.
+
+And As I insert new data into this Wiki, 
+we can also verify that this edit also appears in the upgraded version.
+
+--
+
+So in a real-life scenario, this recording of queries 
+and appending them later allows us to have the old version
+receiving user interactions, 
+while the new parallel version works out the upgrade uninterrupted.
+After the upgrade has been done, we can "catch up" with the modifications
+presented into the old version. 
+When the two systems are in an equivalent state, 
+one just directs all user traffic for the old node to point into the new node.
+And then we can stop using the excessive resources 
+by just shutting down the resources allocated for it.
+
+---
+
+So that's the screencast. For the source code and documentation, 
+look up the github-address on the description of this video.
+
+
+
+
