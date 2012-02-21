@@ -590,32 +590,40 @@ today
 
 \begin_layout Itemize
 create_aws_replica.sh -- Initiates the cloning process by copying the targeted
- node disk-image into a Amazon AMI (Requiring a brief shutdown of the said
- instance.) and starting a new identical instance with the said image.
- Creates a modified.
- configs.replica -file to include the necessary instance details of the replicate
-d instance needed by the rest of the scripts.
+ node disk-image into an Amazon AMI
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+Requiring a brief shutdown of the said instance.
+\end_layout
+
+\end_inset
+
+ and starting a new identical instance with the said image.
+ Creates a modified configs.replica -file to include the necessary instance
+ details needed by the rest of the scripts.
 \end_layout
 
 \begin_layout Itemize
 setup_replica.sh -- Copies the necessary scripts and programs into the new
- instance.
+ instance via scp.
 \end_layout
 
 \begin_layout Itemize
 start_update.sh -- Makes some necessary database-access modifications into
- the query-translating programs and launches an SSH-pipe into the original
- MediaWiki 1.4 node to stream the query log into a file to be readable by
- the local transaction-catchup programs.
+ the query-translating programs and starts an SSH-pipe into the original
+ MediaWiki 1.4 node to stream the query log.
  This is to be run in the new, replicated instance.
 \end_layout
 
 \begin_layout Itemize
-std_update_mwiki14-15.sh -- This script contains tools to download the newer
- MediaWiki 1.5 version and for running the standard upgrade-procedure to
- create a new copy of MediaWiki 1.5 running on top of the restructured database.
+std_update_mwiki14-15.sh -- This script contains tools for running the standard
+ upgrade-procedure to create a new copy of MediaWiki 1.5 running on top of
+ the restructured database.
  This is to be run in the new, replicated instance and requires superuser
  access for the necessary Apache configuration and reboots.
+ The script downloads MediaWiki 1.5 from the SVN-repository.
 \end_layout
 
 \begin_layout Subsubsection
@@ -625,10 +633,10 @@ Query parser, translator and mapper
 \begin_layout Standard
 The rest of the software is a series of python-programs used by update_mediawiki.
 py.
- Update_mediawiki.py requires the path to the file where the original systems
- query-log has been streamed as an argument and eventually writes all updates
- detected for existing articles into the new database schema within the
- parallel universe.
+ Update_mediawiki.py requires an argument of the path to the file where the
+ original systems query-log has been streamed.
+ It eventually rewrites all updates detected in existing articles with the
+ new database schema within the parallel universe.
 \end_layout
 
 \begin_layout Standard
@@ -674,25 +682,28 @@ Developing the software stack from scratch in its current form took from
  with the less understood portions of the toolset and the system undergoing
  the upgrade.
  Most of the time allocated for this project (totalling to approximately
- 250 hours) was spent exploring the problem and the other described approaches
- for it.
+ 250 hours) was spent exploring the problem and the alternate described
+ approaches for it.
 \end_layout
 
 \begin_layout Standard
 I estimate that doing a similar deployment with full feature set within
  similarly limited application could be done in less than 300 hours with
  distributed work and decent professionals.
- Much of the work required would be with testing against other use-cases
- and developing rules for the architecture to parse.
+ Much of the labour required would be testing work of other use-cases and
+ developing rules for the architecture to parse.
  Most of my proof-of-concept programming were about the necessary infrastructure
  in parsing relevant queries and working the communication between the systems.
- The individual translations and query-detection still needed can benefit
- from a robust infrastructure, reducing the amount of programming work in
- the end parts.
- Much of the labour could also substitute the work needed to do the regular
+ The non-implemented individual translations and query-detection tools can
+ benefit from a robust infrastructure, reducing the amount of programming
+ work in the end parts.
+ Much of the labour could also substitute work needed to do the regular
  upgrade.
  The standard upgrading schema could be made to utilize translation rules
  compatible with the real-time updating procedure.
+ For example, one could substitute the PHP- and SQL-scripts of the MediaWiki
+ 1.5 upgrade with generalized build tools capable of rendering the sql-scripts
+ but to also to create the translation rules for online-upgrade.
 \end_layout
 
 \begin_layout Subsection
@@ -704,12 +715,12 @@ Case-specific
 \end_layout
 
 \begin_layout Standard
-Our query-detector and translator approach mainly requires us to understand
- and re-implement large portions of the application logic within an external
+Our query-detector and translator approach requires us to understand and
+ re-implement large portions of the application logic within an external
  framework.
- This requires a significant amount of manual labor and would intuitively
+ This calls for a significant amount of manual labor and would intuitively
  be more suitable to be integrated directly into the standard upgrading
- mechanisms instead of providing an external framework.
+ mechanisms rather than providing an external framework.
  More notably, individual upgrade-instructions are not recyclable for other
  upgrades; neither can we leverage the existing SQL-upgrade instructions
  to automate the logic-programming.
@@ -720,14 +731,14 @@ Query-logs as a data source
 \end_layout
 
 \begin_layout Standard
-Another issue are the limits of the data extractable from the query logs.
+Another issue are in the limits of the data extractable from the query logs.
  Much of the details ending up to the database can be programmed and computed
  to be performed by the database itself without necessarily revealing them
  in the query logs E.g.
  generating entries via database-triggers and the auto-incrementations of
  id's are sometimes done within the database and can't be read from default
  query-logs.
- In the lower levels the database may perform optimizations or transaction
+ In the lower levels - the database may perform optimizations or transaction
  aborts not necessarily visible to the logs.
  Or they can be insufficiently hard to predict and react for in large scale
  parsing.
@@ -736,18 +747,8 @@ Another issue are the limits of the data extractable from the query logs.
  The approach would be more suited to be done by using the existing database
  replication infrastructures and binary-logs, which reliably reveal the
  internal database-actions in detail.
- 
-\end_layout
-
-\begin_layout Standard
-Though due to the elasticity of computing resources and low cost of upgrade-fail
-ures, failed upgrades can be tried again as often as needed.
- This opens us for possibilities of performing a less-refined probabilistic
- upgrade, where we only need a chance for individual upgrade to succeed
- and a number of computers performing the upgrade.
- After a unit passes tests for schema-equivalence, one can use standard
- database-replication suites to duplicate the relevant infrastructure to
- match the existing system.
+ Though this is not guaranteed, since the binary logs might omit necessary
+ data such as the detailed lists of rows affected by a query.
 \end_layout
 
 \begin_layout Subsubsection
@@ -755,12 +756,12 @@ Inefficiency and fault tolerance
 \end_layout
 
 \begin_layout Standard
-The implementation looks into the updates as individual transaction one
- at a time, which is necessary as the program simulates a working application
- performing similar actions in a live use scenario.
- This is hardly efficient for larger data sets and is somewhat error prone;
- should there be unexpected modifications (such as manual inserts) to the
- database not detectable by the developed application.
+The implementation looks into the updates as individual transaction, which
+ is necessary as the program simulates a working application performing
+ similar actions in a live use scenario.
+ This is hardly efficient for larger data sets and error prone; should there
+ be unexpected modifications (such as manual inserts) to the database not
+ detectable by the developed application.
  
 \end_layout
 
@@ -780,14 +781,25 @@ touched
  Then we make a external query to the original database to stream the necessary
  changes into the parallel universe.
  This does not free us from implementing some application logic, as actions
- such as deleting rows or modifying their unique id's would have to be represent
-ed in the tracking logic of tainted-entries.
+ like deleting rows or modifying their unique id's would have to be represented
+ in the tracking logic of tainted-entries.
  Neither is it granted that the query-logs available present us with enough
  data to identify the tainted items.
  For example, an INSERT-query might enter their unique id as NULL and auto-incre
 ment it in the database or application-logic.
  Such incrementation based on the MAX(ID)-value of the new flattened text-table
  of MediaWiki 1.5 was required in our implementation.
+\end_layout
+
+\begin_layout Standard
+Though due to the elasticity of computing resources and low cost of upgrade-fail
+ures, failed upgrades can be tried again as often as needed.
+ This opens us for possibilities of performing a less-refined probabilistic
+ upgrade, where we only need a chance for individual upgrade to succeed
+ and a number of computers performing the upgrade.
+ After a unit passes tests for schema-equivalence, one can use standard
+ database-replication suites to duplicate the relevant infrastructure to
+ match the existing system.
 \end_layout
 
 \begin_layout Subsubsection
@@ -800,8 +812,10 @@ It is necessary to note that the current implementation does not manage
  in Amazon EC2 requires a downtime to make a copy of the image.
  However, it should be possible to make relevant replications in virtualized
  production environments, since equivalent copies of the database can be
- made without shutting down, by using the standard redundancy replication
+ made without shutting down by using the standard redundancy replication
  procedures provided by every major RDBMS.
+ If this is not possible the shutdowns can be made as a rolling wave, requiring
+ only a minimal amount of service degration in a horizontally scaled environment.
 \end_layout
 
 \begin_layout Section
@@ -913,7 +927,7 @@ key "DBLP:dblp_conf/nca/CorreiaPRCVOG07"
 
 \begin_layout Standard
 However, there proved to be a number of issues with this approach.
- First of all, the most mature implementation of GORDA and with MediaWiki
+ Firstly, the most mature implementation of GORDA compatible with MediaWiki
  was one hooking up into a PostgreSQL database.
  For MediaWiki 1.4, the PostgreSQL -support was considered to be 
 \begin_inset Quotes eld
@@ -967,7 +981,7 @@ After approximately 120 hours of development.
 
 \end_inset
 
- the risk probability and time required for additional unknown obstacles
+ - the risk probability and time required for additional unknown obstacles
  were considered too high.
 \end_layout
 
@@ -977,14 +991,13 @@ Using similarity in application calls
 
 \begin_layout Standard
 Another idea to provide upgrades as a service for an ongoing database upgrade
- would be to move the upgrade-synchronization entirely away from the database-la
-yer.
+ would be to move the upgrade-synchronization away from the database-layer.
  If an upgrade touches only the underlying database layer and the application
  interface connecting to it, one could cache and re-route identical application
  calls to a parallel-universe backend replicating similar functionality
  within different schema.
  This kind of upgrade would naturally suit a typical 3-tiered web-application,
- where the user-transactions provided by web-server are separated from a
+ where the user transactions provided by web-server are separated from a
  dynamic content engine and data storages.
 \end_layout
 
@@ -1026,16 +1039,16 @@ A typical 3-tiered web application
 
 \begin_layout Standard
 Should the interface to the frontend-engine stay identical, this kind of
- approach would provide a fairly easy and elegant solution for making a
- seamless transition to new software version without requiring any adaptations
- or query mappings between the systems.
+ approach would provide an easy and elegant solution for making a seamless
+ transition to new software version without requiring any adaptations or
+ query mappings between the systems.
  In the case of MediaWiki 1.4 to 1.5 upgrade, the main focus of the upgrade
  was this database-schema change.
  The upgrade could have been split into parts only affecting the application
- & database layers whilst keeping the user facing web server interface the
+ & database layers while keeping the user facing web server interface the
  same.
- Should an upgrade provide any UI modifications, those can be made in an
- another upgrade-package keeping the database untouched.
+ Should an upgrade provide any UI modifications, those could be made in
+ an another upgrade-package keeping the database untouched.
 \end_layout
 
 \begin_layout Standard
@@ -1090,7 +1103,7 @@ Not every kind of software update would work with this approach.
 \begin_layout Standard
 Other issue would be the lack of guarantees for consistency in the entire
  stack.
- Should there be failures in the middle- or database tier of the live-system,
+ Should there be failures in the middle- or database-tier of the live system,
  a dumb frontend-replicator would not detect them nor present adequate informati
 on to account the inconsistency in the parallel universe.
  Such issues could be coped with most standard redundancy & reliability
@@ -1143,9 +1156,9 @@ Using the existing upgrade tools to decreasing database subsets
 \end_layout
 
 \begin_layout Standard
-One of the more intriguing approaches would be to create a framework to
- be able to read the existing schema-upgrade scripts available and deduct
- the upgrade logic and resulting table from those.
+One of the more intriguing approaches would be to create a framework capable
+ of reading the existing schema-upgrade scripts available and deduct the
+ upgrade logic and resulting tables from them.
  Since the target tables are expanding leading to increasing time-requirements
  of re-applying the updates to complete tables, we need to be able to divide
  the work into smaller subsets as new items and updates get inserted during
@@ -1157,8 +1170,9 @@ An intuitive way for such division would be to split the dataset under update
  by their timestamps, so that we only re-run the standard upgrade script
  for new items inserted after the last known item in the databases under
  upgrade was received.
- However, under some upgrades this will provide and incompatible and possibly
- broken consistency due to the unpredictability of the live-system updates.
+ However, under some upgrades this will lead to different results than a
+ normal, singular update and possibly broken consistency due to the unpredictabi
+lity of the live-system updates.
 \end_layout
 
 \begin_layout Standard
@@ -1172,10 +1186,9 @@ An intuitive way for such division would be to split the dataset under update
 MediaWiki 1.4 used two separate tables to represent articles (cur-table)
  and their revision history (old-table).
  The tables contain mostly similar information allowing the history to be
- formed by mostly copying the old contents of cur-table to be archived in
- old-table.
+ formed by copying the old contents of cur-table to be archived in old-table.
  The upgrade in MediaWiki 1.5 system combines these and splits them into
- three tables containing different logical fractions of the same data.
+ three tables containing different logical fractions of the data.
 \end_layout
 
 \begin_layout Standard
@@ -1785,9 +1798,8 @@ Merged old-table
 \end_layout
 
 \begin_layout Standard
-However, suppose that we receive a third state to the original-system during
- the time taken by the upgrade of the system and it receives several updates
- for it.
+Suppose that we receive a third state to the original-system during the
+ time taken by the upgrade and it receives several updates for it.
  We have sufficient translation logic in place to only apply the INSERT-queries
  for items entered to the database after we begun merging our previous entries.
  The code would work something like this:
@@ -2647,16 +2659,16 @@ Merged-old table without online-upgrading
 \begin_layout Standard
 The id's for items in the different upgrade-approaches are not equivalent.
  If it is used as an external-id in somewhere else in database-logic without
- the necessary modifications, we will encounter in faulty behaviour.
+ the necessary modifications, we will end in faulty behaviour.
  To fix this, we need to implement some amount of application- or database-logic
- to upgrade corresponding tables with history_id references.
+ to upgrade corresponding tables with old_id references.
 \end_layout
 
 \begin_layout Standard
 This would likely not be a problem within the MediaWiki, since the id's
  are supposedly used only for separating primary id's from each other and
  the supposed order carries no significance.
- However, inconsistency of incrementation might be an issue in some programs.
+ However, inconsistency of incrementation might be an issue for some programs.
  Such as ones requiring predictable consistency with FETCH FIRST [N] -queries
 \begin_inset CommandInset citation
 LatexCommand cite
@@ -2664,7 +2676,7 @@ key "iso9075-3"
 
 \end_inset
 
- for unordered data or non-standard SQL such as TOP or LIMIT -syntaxes.
+ for (un)ordered data or non-standard SQL such as TOP or LIMIT -syntaxes.
 \end_layout
 
 \begin_layout Section
@@ -2682,7 +2694,7 @@ Although the approach with GORDA proved to be unfeasible in this scope,
 
 \begin_layout Standard
 And even if the other introduced methods to perform upgrades externally
- in replicated environments are not generalizible, we have still to examine
+ in replicated environments are not generazible, we have still to examine
  whether they might be sufficient for individual cases such as the MediaWiki
  upgrade presented.
  Especially given the simplicity of rerouting high-level application calls
@@ -2692,10 +2704,10 @@ And even if the other introduced methods to perform upgrades externally
 
 \begin_layout Standard
 Though this study does not help much with re-trying the GORDA-route, one
- could examine the costs of extending the database replication protocols
- to suit dynamic modifications to the queries and for presenting more detailed
- views on the interactions to support an upgrade-compatible replication
- procedure.
+ could examine the costs of extending the most common database replication
+ protocols to suit dynamic modifications to the queries and for presenting
+ more detailed views on the interactions to support an upgrade-compatible
+ replication procedure.
 \end_layout
 
 \begin_layout Section
@@ -2707,12 +2719,14 @@ The implementation provided falls short with the initial goal of performing
  an online upgrade in a scale comparable to a real-life use scenario.
  (I.e.
  the entire Wikipedia and updates performed to it during the upgrade.) Though
- we manage to explore illustrate several approaches for the task and the
- challenges involved.
- Mostly relating with the need to model much of the application logic within
- the mapper and the unreliabliness of the used data-source.
- For which the former would be solvable by being able to utilize the upgrading
- schema in a suitable framework and applications and for the latter 
+ we manage to explore several approaches for the task and the challenges
+ involved.
+ The challenges mostly relate with the need to model much of the application
+ logic within the mapper and the unreliabliness of the used data-source.
+ The former would be solvable by being able to utilize the upgrading schema
+ in a suitable framework and applications.
+ The latter could be figured out by extending and reconfiguring the logging
+ protocols themselves.
 \end_layout
 
 \begin_layout Standard
