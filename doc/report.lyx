@@ -125,10 +125,10 @@ http://github.com/Eeko/mediawiki_uaas/
 
 \begin_layout Abstract
 This report examines several concepts of performing upgrades for real-time
- service applications without usage downtime by leveraging the possibilities
- of using on-demand computing resources provided by Infrastructure as a
- Service -providers.
- Common example of such application would be a public web-service requiring
+ service applications without usage downtime.
+ This is done by leveraging some possibilities of using on-demand computing
+ resources provided by Infrastructure as a Service -providers.
+ Common example of such application could be a public web-service requiring
  high availability for user, yet utilizing centrally maintained server architech
 ture for operation.
  
@@ -137,11 +137,11 @@ ture for operation.
 \begin_layout Abstract
 Within the study we produced a feature-limited prototype of a a tool intended
  for providing a live-upgrade from MediaWiki 1.4 to 1.5.
- Which originally required over 22 hours of write-locking to the system
- when it was applied into the English Wikipedia in 2005.
+ The upgrade originally required over 22 hours of write-lock to the system
+ when it was applied to the English Wikipedia in 2005.
  In addition of building the tool, we explored a set of possible approaches
- to easen the availability problem during the upgrade and the innate challenges
- with implementing and using said approaches.
+ to help with the upgrade availability problem and the innate challenges
+ withtheir implementation and use.
 \end_layout
 
 \begin_layout Section
@@ -170,7 +170,8 @@ http://www.eurecom.fr/
 
 \end_inset
 
- semester project done between July 2011 - January 2012.
+ Semester Project -course.
+ The study was done between July 2011 - January 2012.
  The purpose of the project was to research and demonstrate possibilities
  to leverage flexible cloud-infrastructure to provide online service updates
  with very little or no downtime for the end-user.
@@ -182,33 +183,34 @@ http://www.eurecom.fr/
 \begin_layout Standard
 In the study, we first define the problem of performing service upgrades
  without downtime and introduce the concept of using on-demand computing
- resources for providing flexible capability to trade system downtime to
- temporary computing resources.
+ resources in order to provide flexible capability.
+ This allows us to trade system downtime into temporary increase in computing
+ resources.
  We also examine the case of Wikipedia 1.4 to 1.5 upgrade in 2005, where the
- significant table-restructurings originally required a 22 hour write-lock
- in operations.
+ significant table-restructuring originally required a 22 hour write-lock
+ in operations when done for the full Wikipedia dataset.
 \end_layout
 
 \begin_layout Standard
-For this problem, we present a prototype for a software performing capable
- of tackling a small subproblem of the said upgrade without requiring a
- write-lock in the original system.
+For this problem, we present a prototype for a software capable of handling
+ a small subproblem of the said upgrade without requiring a write-lock in
+ the original database.
  Namely we present a program which translates an article upgrade in the
- old 1.4 schema to the new 1.5 schema running in a replicated computing environmen
-t.
+ old 1.4 schema into the new 1.5 schema running simultaneously in a replicated
+ computing environment.
  The implementation showed a number of limitations, such as the requirement
- of translating much of the application logic to a format understandable
- by the translator and the need for reasoning logic due to the limited informati
-on in the data sources.
+ for translating much of the application logic to a format understandable
+ by the translator and the need for separate reasoning and decision logic
+ due to the limited information in the data sources.
 \end_layout
 
 \begin_layout Standard
 After describing the software created, we examine some of the alternate
- approaches explored along the project and the issues encountered with them.
+ approaches explored during the project and the issues encountered with
+ them.
  Much of the focus with these approaches are beyond just upgrading an individual
- application (MediaWiki), but in viewing them in greater generalization
- and why they can be infeasible for larger, more comlex and less robust
- programs.
+ application (MediaWiki), but in finding generalizations and why they might
+ be infeasible for larger, more complex and robust programs.
 \end_layout
 
 \begin_layout Section
@@ -218,11 +220,11 @@ Problem
 \begin_layout Standard
 The high level issue under research is the possibility of performing system-upda
 tes in scale without affecting the availability of service to the end-user.
- With system updates changing the functionality of software, the usual case
- requires some unavailability period while modifications to the system are
- made.
+ With system updates changing the functionality of software, the common
+ case requires an unavailability for the period while modifications to the
+ system are made.
  For this study, we reviewed the Wikipedia upgrade 1.5 from 2005, which required
- a 22 hour write lock due to a significant database-schema change requiring
+ a 22 hour write lock due to a significant database-schema change, requiring
  a re-write of the entire article database.
 \begin_inset Foot
 status open
@@ -249,12 +251,14 @@ http://meta.wikimedia.org/wiki/MediaWiki_1.5_upgrade
 \begin_layout Standard
 There are two conventional methods to avoid availability breaks in a distributed
  system.
- One is to perform the upgrade as a switch-over, where the system is split
+ One is to perform the upgrade as a switch-over where the system is split
  in two halves.
- First one part of the system gets updated upgraded while the other part
- serves the clients.
+ First part of the system gets upgraded while the other part serves the
+ clients.
  When the update is completed, the updated system is switched to be the
- client-serving end and the other part applies the update in turn.
+ client-serving end and the other part applies the same update in turn.
+ This means the end-user performance of the system is halved during the
+ upgrade.
  The second way is to perform the upgrade as a 
 \begin_inset Quotes eld
 \end_inset
@@ -264,8 +268,8 @@ rolling wave
 \end_inset
 
 .
- Here the upgrade is applied to individual nodes of the distributed system
- in successive order.
+ In Rolling Wave the upgrade is applied to individual nodes of the distributed
+ system in successive order.
  This allows for a greater accuracy in failure localization and reduces
  risks of failures as the entire system (or significant parts of it) do
  not get compromised for upgrade-errors.
@@ -276,8 +280,8 @@ However, neither of these approaches allow a downtimeless upgrade if the
  upgrade causes backwards incompatibilities.
  Any updates into the non-updated systems should reflect into the updated
  system as well.
- In this study, such incompatibility appears with the significant database-schem
-a change of MediaWiki 1.5.
+ In this study, such incompatibility appears with the database-schema change
+ of MediaWiki 1.5.
 \end_layout
 
 \begin_layout Subsection
@@ -286,8 +290,8 @@ Leveraging elastic computing resources for updates
 
 \begin_layout Standard
 The examined method of avoiding the incompatibility issues with downtimeless
- upgrade is to use external computing resources to flexibly clone the existing
- service into a 
+ upgrade is to use external computing resources to clone the existing service
+ into a 
 \begin_inset Quotes eld
 \end_inset
 
@@ -295,12 +299,20 @@ parallel universe
 \begin_inset Quotes erd
 \end_inset
 
-, where the upgrade can be applied without touching the existing system
- providing service to the clients.
- When the upgrade is successfully applied to a machine cloned from a correspondi
-ng existing resource, the system performs some kind of catch-up with the
- changes inserted into the original client-serving machine and starts routing
- the client requests into itself.
+.
+ In the parallel universe, the upgrade can be applied without touching the
+ existing system still providing service to the clients.
+ When the upgrade is successfully applied into a server cloned from a correspond
+ing existing resource, the parallel system performs a 
+\begin_inset Quotes eld
+\end_inset
+
+catch-up
+\begin_inset Quotes erd
+\end_inset
+
+ with the changes inserted into the original client-serving server and starts
+ routing the client requests into itself.
  
 \begin_inset CommandInset citation
 LatexCommand cite
@@ -312,12 +324,12 @@ key "DBLP:conf/middleware/DumitrasN09a"
 \end_layout
 
 \begin_layout Standard
-Modern cloud computing infrastructures provide us with a flexible platform
- for creating and utilizing external resources as needed.
+Modern cloud computing infrastructures provide us with a platform for creating
+ and utilizing external resources as needed.
  Applications running within Infrastructure as a Service (IaaS) providers
  such as Amazon EC2, Rackspace Cloud Servers or OpenNebula are by default
- running on virtualized hardware and are thus very easily replicable without
- large and permanent investments in big hardware.
+ running on virtualized hardware and are generally easily replicable without
+ large and permanent investments in hardware.
 \end_layout
 
 \begin_layout Subsection
@@ -325,7 +337,7 @@ MediaWiki 1.4 to 1.5 upgrade
 \end_layout
 
 \begin_layout Standard
-The June 2005 update to MediaWiki 1.5 was primarily introduced to perform
+The June 2005 update to MediaWiki 1.5 was introduced primarily to perform
  the schema change examined in this project.
  Few of the new features, such as logging the page-rename history and revised
  permalinking are dependant on the new schema.
@@ -344,7 +356,7 @@ cur
 \begin_inset Quotes erd
 \end_inset
 
--table contained the most recent revisions of the articles in their entirety.
+-table contained the most recent revisions of the articles.
  The 
 \begin_inset Quotes eld
 \end_inset
@@ -365,12 +377,12 @@ cur_namespace + cur_title
 
 .
  A completely new article appears as a new insertion into the cur-table
- and a modification creates a new entry to the old-table where the contents
- of the previous cur-entry are copied before it gets updated.
+ and a modification creates a new entry to the old-table to where the contents
+ of the obsolete cur-entry are copied before it gets updated.
 \end_layout
 
 \begin_layout Standard
-In the 1.5 version, the tables are split into three tables.
+In the 1.5 version, the architecture is split into three tables.
  The new 
 \begin_inset Quotes eld
 \end_inset
@@ -379,11 +391,10 @@ revision
 \begin_inset Quotes erd
 \end_inset
 
- table is formed by combining the previous old- and cur tables and is intended
+ table is formed by combining the previous old- and cur-tables and is intended
  to represent the relevant metadata for all article insertions and updates
- of the system.
- Such as the user who edited the page, the relevant timestamps and comments
- of the new update.
+ of the system - such as the data of the user who edited the page, the relevant
+ timestamps and comments of the new update.
  A revision-entry is connected to a relevant entry in 
 \begin_inset Quotes eld
 \end_inset
@@ -450,10 +461,6 @@ key "wiki:SchemaChangeChart"
 
 \end_layout
 
-\begin_layout Plain Layout
-
-\end_layout
-
 \end_inset
 
 
@@ -466,15 +473,15 @@ Solution
 \begin_layout Standard
 We built a small prototype of a software-stack capable of reading the MySQL
  query logs in real time from the system providing service to the end-user.
- Whenever it detects an update to the article-tables under update, it would
+ Whenever it detects an update to the article tables under update, it would
  create a translation of those queries compatible with the new schema.
- After the standard, non-modified 1.4 to 1.5 update is applied to the parallel
+ After the standard, non-modified, 1.4 to 1.5 update is applied to the parallel
  universe clone of the system, we use an external program hooking into the
  new database.
- This program uses the recorder modifications to mimic inserting article
+ This program uses the recorded modifications to mimic inserting article
  updates to the updated database.
  When the system under update has reached a synchronous state with the live-syst
-em, we can shut down the old systemand the upgrade programs and route all
+em, we can shut down the old system, the upgrade programs - and route all
  traffic to the updated system.
 \end_layout
 
@@ -526,13 +533,14 @@ System replication tools
 To automate the system replication procedure, we developed a series of bash-scri
 pts leveraging the Amazon EC2-tools and knowledge of the details of the
  system under upgrade.
- Mainly we require the Amazon instance running details (instance number,
- hostname) and the application information (database name, host, username
- and password) for running the replication stack.
- The system is designed in a way, that we can use an external node with
- ssh- and EC2-tools access to the Amazon Instances to dowload the necessary
- programs from repository and start performing the upgrade process centrally,
- without touching the running instance providing service for the clients.
+ Primarily we require the Amazon instance running details (instance number,
+ public hostname) and the application information (database name, host,
+ username and password) for running the replication stack.
+ The system is designed so that we can use an external node with ssh- and
+ EC2-tools configured to access to the Amazon control services to download
+ the necessary programs from repositories and start performing the upgrade
+ process centrally.
+ Without touching the running instance still providing service for the clients.
 \end_layout
 
 \begin_layout Standard
@@ -546,7 +554,7 @@ The main scripts to initiate the upgrading process are as follows:
 configs.conf -- A sourcable configuration file to set the required environmental
  variables in the bash-scripts.
  Requires manual modifications to point to the EC2-node to be replicated
- and for the necessary database knowledge.
+ and to know how to hook into the database.
 \end_layout
 
 \begin_layout Itemize
@@ -577,7 +585,7 @@ today
  be replicated.
  Such as Python 2.7 and mysql-python required by the updater software.
  Should also ensure that the required program-versions are available for
- the updating scripts at the locations specified in them.
+ the updating scripts in the locations specified in them.
 \end_layout
 
 \begin_layout Itemize
